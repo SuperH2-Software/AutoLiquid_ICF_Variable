@@ -15,6 +15,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -165,6 +166,14 @@
     <Compile Include="Utils\TipHelper.cs" />
     <Compile Include="Utils\ViewUtils.cs" />
     <Compile Include="Utils\WindowUtils.cs" />
+    <Compile Include="VariablePitch\ZlgCanBus.cs" />
+    <Compile Include="VariablePitch\ICanBus.cs" />
+    <Compile Include="VariablePitch\SimulatedCanBus.cs" />
+    <Compile Include="VariablePitch\VariablePitchController.cs" />
+    <Compile Include="VariablePitch\VariablePitchFunctionCode.cs" />
+    <Compile Include="VariablePitch\VariablePitchManager.cs" />
+    <Compile Include="VariablePitch\VariablePitchSpeed.cs" />
+    <Compile Include="VariablePitch\VariablePitchStatusData.cs" />
     <Compile Include="Window\WindowAbout.xaml.cs">
       <DependentUpon>WindowAbout.xaml</DependentUpon>
     </Compile>
@@ -188,6 +197,9 @@
     </Compile>
     <Compile Include="Window\WindowUV.xaml.cs">
       <DependentUpon>WindowUV.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Window\WindowVariablePitchDebug.xaml.cs">
+      <DependentUpon>WindowVariablePitchDebug.xaml</DependentUpon>
     </Compile>
     <Page Include="Assets\StringResource_zh.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -328,6 +340,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Window\WindowVariablePitchDebug.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -371,5 +387,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

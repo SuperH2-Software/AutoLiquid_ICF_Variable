@@ -20,10 +20,12 @@ namespace AutoLiquid_ICF_Variable.EntityJson
         /**
          * 可变距
          */
-        // 是否可变距
+        // 是否可变距（true=外挂变距模块，false=机器原始不变距模块）
         public bool IsVariable = false;
         // 变距是否与x、y轴同时运动
         public bool VariableMoveSameTime = true;
+        // 变距模块 CAN 设备 ID（默认 0x01，可通过调试界面修改）
+        public byte VariableCanDeviceId = 0x01;
 
         /**
          * Y轴相关
@@ -38,7 +40,7 @@ namespace AutoLiquid_ICF_Variable.EntityJson
         /**
          * P轴相关
          */
-        // P轴是否可用
+        // P轴是否可用（变距模块时 P 轴由 CAN 接管）
         public bool PAvailable = true;
 
 
@@ -49,7 +51,7 @@ namespace AutoLiquid_ICF_Variable.EntityJson
         public int ChannelRow = 1;
         // 通道列数
         public int ChannelCol = 1;
-        // 通道间距
+        // 通道间距（mm），变距模式下此值作为 CAN 变距目标值
         public decimal ChannelStep = 9.0m;
         // 移液头量程
         public ELiquidRange HeadLiquidRange = ELiquidRange.Ten;

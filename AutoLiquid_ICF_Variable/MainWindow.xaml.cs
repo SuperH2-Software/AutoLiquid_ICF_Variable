@@ -687,6 +687,10 @@ namespace AutoLiquid_ICF_Variable
         {
             ViewUtils.ShowLogo(this);
 
+            // 是否变距
+            if (!ParamsHelper.HeadList[0].IsVariable)
+                this.MenuItemVariablePitchDebug.Visibility = Visibility.Collapsed;
+
             // 移液头2是否可以设置
             if (!ParamsHelper.HeadList[1].Available)
                 this.MenuItemUserSettingHead2.Visibility = Visibility.Collapsed;
@@ -863,6 +867,7 @@ namespace AutoLiquid_ICF_Variable
             // 菜单栏
             this.MenuItemUserSettingHead1.Click += MenuItemOnClick;
             this.MenuItemUserSettingHead2.Click += MenuItemOnClick;
+            this.MenuItemVariablePitchDebug.Click += MenuItemOnClick;
             this.MenuItemOriginCalibration.Click += MenuItemOnClick;
             this.MenuItemModifyPwd.Click += MenuItemOnClick;
             this.MenuItemAbout.Click += MenuItemOnClick;
@@ -950,6 +955,11 @@ namespace AutoLiquid_ICF_Variable
             {
                 WindowCommonSettingHead wcsh2 = new WindowCommonSettingHead(1);
                 wcsh2.ShowDialog();
+            }
+            else if (sender.Equals(this.MenuItemVariablePitchDebug))
+            {
+                WindowVariablePitchDebug wvpd = new WindowVariablePitchDebug();
+                wvpd.ShowDialog();
             }
             else if (sender.Equals(this.MenuItemOriginCalibration))
             {
@@ -2387,7 +2397,7 @@ namespace AutoLiquid_ICF_Variable
                                     sourceHoleIndex.StepNotSameX = tipHoleStepNotSameAsSourceX;
                                     sourceHoleIndex.StepNotSameY = tipHoleStepNotSameAsSourceY;
                                     // 特殊处理：2025-10-18， StepNotSameX和StepNotSameY均为false，则认为间距一致，OriIndex置为行index即可
-                                    if (!sourceHoleIndex.StepNotSameX && !sourceHoleIndex.StepNotSameY) 
+                                    if (!sourceHoleIndex.StepNotSameX && !sourceHoleIndex.StepNotSameY)
                                         sourceHoleIndex.OriIndex = sourceRowIndex;
                                     // 特殊处理：例如溶液槽y孔距比移液头y孔距大，默认走到溶液槽A1，不走偏移
                                     // （暂舍弃 2024-03-18）

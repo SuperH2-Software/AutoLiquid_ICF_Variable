@@ -29,8 +29,10 @@
                 </Grid.ColumnDefinitions>
                 <!--菜单栏-->
                 <Menu x:Name="MenuBar">
-                    <MenuItem Header="{StaticResource Setting}">
-                        <MenuItem x:Name="MenuItemUserSettingHead1" Header="{StaticResource Head1}"/>
+                    <MenuItem x:Name="MenuItemUserSettingHead1" Header="{StaticResource HeadSetting}"/>
+                    <MenuItem x:Name="MenuItemVariablePitchDebug" Header="{StaticResource VariablePitchDebug}"/>
+                    <MenuItem Header="{StaticResource HeadSetting}" Visibility="Collapsed">
+                        <MenuItem Header="{StaticResource Head1}" Visibility="Collapsed"/>
                         <MenuItem x:Name="MenuItemUserSettingHead2" Header="{StaticResource Head2}"/>
                         <MenuItem x:Name="MenuItemOriginCalibration" Header="{StaticResource OriginCalibration}" Visibility="Collapsed"/>
                     </MenuItem>

@@ -166,6 +166,8 @@
     <s:String x:Key="LiquidRangePercent">量程百分比</s:String>
     <s:String x:Key="Head1">移液头1</s:String>
     <s:String x:Key="Head2">移液头2</s:String>
+    <s:String x:Key="HeadSetting">移液头设置</s:String>
+    <s:String x:Key="VariablePitchDebug">变距模块调试</s:String>
     <s:String x:Key="Head1Setting">移液头1设置</s:String>
     <s:String x:Key="Head2Setting">移液头2设置</s:String>
     <s:String x:Key="HeadAttribute">移液头属性</s:String>
