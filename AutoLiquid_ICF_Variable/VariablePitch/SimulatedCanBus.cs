@@ -18,6 +18,12 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         private byte _simulatedDeviceId = 0x01;
         private byte _simulatedPitchCode = 0x8C; // 14mm（原点）
 
+        // ── 动态运行状态（修复：原来 ReadStatus 返回固定值）─────────
+        private volatile bool _isReleasingTip = false;
+        private volatile bool _isAtOrigin14mm = true;   // 初始在原点
+        private volatile bool _isPistonHoming = false;
+        private volatile bool _isCalibrating = false;
+
         public bool Open() { IsOpen = true; return true; }
         public void Close() { IsOpen = false; }
 
@@ -38,7 +44,19 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
             switch (func)
             {
                 case VariablePitchFunctionCode.ReleaseTip:
-                    // 无附加数据
+                    // 异步模拟松开枪头动作（约 2s），期间 ReadStatus 会返回正确的进行中状态
+                    _ = Task.Run(async () =>
+                    {
+                        _isReleasingTip = true;
+                        _isAtOrigin14mm = false;
+                        _isPistonHoming = true;   // 协议示例：松开枪头期间活塞自检同步进行
+                        _isCalibrating = true;
+                        await Task.Delay(2000);
+                        _isReleasingTip = false;
+                        _isPistonHoming = false;
+                        _isCalibrating = false;
+                        // 松开后不在 14mm 原点
+                    });
                     break;
 
                 case VariablePitchFunctionCode.SetPitch:
@@ -59,6 +77,7 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
                         resp[3] = (byte)(_simulatedVolumeUl & 0xFF);
                         break;
                     }
+
                 case VariablePitchFunctionCode.Dispense:
                     {
                         int vol = (data[1] << 8) | data[2];
@@ -67,6 +86,7 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
                         resp[3] = (byte)(_simulatedVolumeUl & 0xFF);
                         break;
                     }
+
                 case VariablePitchFunctionCode.SetSpeed:
                     _simulatedAspirateSpeed = data[1];
                     _simulatedDispenseSpeed = data[2];
@@ -79,6 +99,16 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
 
                 case VariablePitchFunctionCode.PistonHome:
                     _simulatedVolumeUl = 0;
+                    // 异步模拟活塞自检回零（约 3s）
+                    _ = Task.Run(async () =>
+                    {
+                        _isPistonHoming = true;
+                        _isCalibrating = true;
+                        await Task.Delay(3000);
+                        _isPistonHoming = false;
+                        _isCalibrating = false;
+                        _isAtOrigin14mm = true;
+                    });
                     break;
 
                 case VariablePitchFunctionCode.ReadVolume:
@@ -87,10 +117,18 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
                     break;
 
                 case VariablePitchFunctionCode.ReadStatus:
-                    // 模拟：在原点（14mm）
-                    resp[2] = 0x02; // Bit1=AtOrigin14mm
-                    resp[3] = 0x00;
-                    break;
+                    // 修复：根据动态状态构造 S1/S2，不再返回固定值
+                    {
+                        byte s1 = 0;
+                        byte s2 = 0;
+                        if (_isReleasingTip) s1 |= 0x01; // Bit0：正在松开枪头
+                        if (_isAtOrigin14mm) s1 |= 0x02; // Bit1：14mm 原点
+                        if (_isPistonHoming) s2 |= 0x01; // Bit0：活塞自检中
+                        if (_isCalibrating) s2 |= 0x02; // Bit1：校准中
+                        resp[2] = s1;
+                        resp[3] = s2;
+                        break;
+                    }
 
                 case VariablePitchFunctionCode.ModifyId:
                     _simulatedDeviceId = data[1];
