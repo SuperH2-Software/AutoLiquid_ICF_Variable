@@ -82,6 +82,9 @@ namespace AutoLiquid_ICF_Variable.Window
                 }
             }
 
+            // ★ 套上日志装饰器，发送/接收自动打印 16 进制原始帧
+            canBus = new LoggingCanBus(canBus, AppendLog);
+
             _ctrl?.Dispose();
             _ctrl = new VariablePitchController(canBus, deviceId);
             bool ok = _ctrl.Connect();
@@ -326,41 +329,6 @@ namespace AutoLiquid_ICF_Variable.Window
             }
             else
                 AppendLog("❌ 读取速度 失败");
-        }
-
-        // ════════════════════════════════════════════════════
-        // 设备管理
-        // ════════════════════════════════════════════════════
-
-        private async void BtnModifyId_Click(object sender, RoutedEventArgs e)
-        {
-            if (!EnsureConnected()) return;
-            if (!byte.TryParse(TxtNewId.Text.Trim(), out byte newId) || newId == 0)
-            {
-                AppendLog("❌ 新 ID 无效（范围 1~255）");
-                return;
-            }
-            using var _ = DisableButton(sender);
-            AppendLog($"▶ 修改设备 ID → {newId} (0x{newId:X2})...");
-            bool ok = await _ctrl.ModifyDeviceIdAsync(newId);
-            if (ok)
-            {
-                TxtDeviceId.Text = newId.ToString();
-                AppendLog($"✅ 设备 ID 已修改为 {newId}（重连后生效）");
-            }
-            else
-                AppendLog("❌ 修改 ID 失败");
-        }
-
-        private async void BtnQueryId_Click(object sender, RoutedEventArgs e)
-        {
-            if (!EnsureConnected()) return;
-            AppendLog("▶ 查询设备 ID...");
-            var id = await _ctrl.QueryDeviceIdAsync();
-            if (id.HasValue)
-                AppendLog($"✅ 设备 ID = {id.Value}（0x{id.Value:X2}）");
-            else
-                AppendLog("❌ 查询 ID 失败");
         }
 
         // ════════════════════════════════════════════════════

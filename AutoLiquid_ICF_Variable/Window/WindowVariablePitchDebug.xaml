@@ -11,43 +11,36 @@
     <Grid Margin="10">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <StackPanel Orientation="Vertical">
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- ═══ 连接设置 ═══ -->
-                    <GroupBox BorderThickness="{StaticResource GroupBoxBorderThickness}">
-                        <GroupBox.Header>
-                            <Label Content="连接设置"
+                <!-- ═══ 连接设置 ═══ -->
+                <GroupBox BorderThickness="{StaticResource GroupBoxBorderThickness}">
+                    <GroupBox.Header>
+                        <Label Content="连接设置"
                           FontSize="{StaticResource SettingGroupBoxTitleFontSize}"
                           Foreground="White"/>
-                        </GroupBox.Header>
-                        <StackPanel Orientation="Horizontal" Margin="5,8">
-                            <Label Content="CAN 设备 ID："
+                    </GroupBox.Header>
+                    <StackPanel Orientation="Horizontal" Margin="5,8">
+                        <Label Content="CAN 设备 ID："
                           FontSize="{StaticResource SettingNormalFontSize}"
                           VerticalContentAlignment="Center"/>
-                            <TextBox x:Name="TxtDeviceId"
+                        <TextBox x:Name="TxtDeviceId"
                             Text="1"
                             Width="50" Height="30"
                             FontSize="{StaticResource SettingNormalFontSize}"
                             VerticalContentAlignment="Center"
                             Margin="0,0,10,0"/>
-                            <CheckBox x:Name="ChkSimulate"
+                        <CheckBox x:Name="ChkSimulate"
                              Content="模拟模式"
                              FontSize="{StaticResource SettingNormalFontSize}"
                              VerticalContentAlignment="Center"
                              Margin="0,0,15,0"/>
-                            <Button x:Name="BtnConnect"
+                        <Button x:Name="BtnConnect"
                            Content="连  接"
                            Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
                            Height="30" Width="80"
                            FontSize="{StaticResource SettingBtnFontSize}"
                            Margin="5,0"
                            Click="BtnConnect_Click"/>
-                            <Button x:Name="BtnDisconnect"
+                        <Button x:Name="BtnDisconnect"
                            Content="断  开"
                            Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
                            Height="30" Width="80"
@@ -55,60 +48,18 @@
                            Margin="5,0"
                            IsEnabled="False"
                            Click="BtnDisconnect_Click"/>
-                            <Ellipse x:Name="EllipseStatus"
+                        <Ellipse x:Name="EllipseStatus"
                             Width="16" Height="16"
                             Fill="Gray"
                             Margin="15,0,5,0"
                             VerticalAlignment="Center"/>
-                            <Label x:Name="LblConnStatus"
+                        <Label x:Name="LblConnStatus"
                           Content="未连接"
                           FontSize="{StaticResource SettingNormalFontSize}"
                           Foreground="Gray"
                           VerticalContentAlignment="Center"/>
-                        </StackPanel>
-                    </GroupBox>
-
-                    <!-- ═══ 设备管理 ═══ -->
-                    <GroupBox Grid.Column="1" BorderThickness="{StaticResource GroupBoxBorderThickness}" Margin="5,0,0,0">
-                        <GroupBox.Header>
-                            <Label Content="设备管理"
-                                FontSize="{StaticResource SettingGroupBoxTitleFontSize}"
-                                Foreground="White"/>
-                        </GroupBox.Header>
-                        <StackPanel Margin="5,8">
-                            <StackPanel Orientation="Horizontal" Margin="0,3">
-                                <Label Content="新 ID (1~255)："
-                                    FontSize="{StaticResource SettingNormalFontSize}"
-                                    Width="{StaticResource SettingTitleWidth}"
-                                    VerticalContentAlignment="Center"/>
-                                <Label Content="："
-                                    FontSize="{StaticResource SettingNormalFontSize}"
-                                    Width="{StaticResource SettingColonWidth}"
-                                    VerticalContentAlignment="Center"/>
-                                <TextBox x:Name="TxtNewId"
-                                      Text="1"
-                                      Width="60" Height="30"
-                                      FontSize="{StaticResource SettingNormalFontSize}"
-                                      VerticalContentAlignment="Center"
-                                      Margin="0,0,10,0"/>
-                                <Button Content="修改 ID"
-                                     Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
-                                     Height="30" Width="80"
-                                     FontSize="{StaticResource SettingBtnFontSize}"
-                                     Margin="10,0,5,0"
-                                     Click="BtnModifyId_Click"/>
-                                <Button Content="查询 ID"
-                                     Style="{StaticResource MahApps.Styles.Button.Square.Accent}"
-                                     Height="30" Width="80"
-                                     FontSize="{StaticResource SettingBtnFontSize}"
-                                     Margin="5,0"
-                                     Click="BtnQueryId_Click"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </GroupBox>
-                </Grid>
-
-
+                    </StackPanel>
+                </GroupBox>
 
                 <!-- ═══ 实时状态 ═══ -->
                 <GroupBox BorderThickness="{StaticResource GroupBoxBorderThickness}" Margin="0,5,0,0">
@@ -443,11 +394,15 @@
                                       Height="150"
                                       VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Auto">
-                            <TextBlock x:Name="TxtLog"
-                                       FontFamily="Consolas"
-                                       FontSize="12"
-                                       TextWrapping="NoWrap"
-                                       Margin="4"/>
+                            <TextBox x:Name="TxtLog"
+                                     FontFamily="Consolas"
+                                     FontSize="12"
+                                     TextWrapping="NoWrap"
+                                     IsReadOnly="True"
+                                     IsReadOnlyCaretVisible="True"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     Margin="4"/>
                         </ScrollViewer>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0">
                             <Button Content="清空日志"
