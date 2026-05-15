@@ -151,7 +151,7 @@ namespace AutoLiquid_ICF_Variable.Window
             if (_ctrl == null) return;
 
             var status = await _ctrl.ReadStatusAsync();
-            var volume = await _ctrl.ReadVolumeAsync();
+            //var volume = await _ctrl.ReadVolumeAsync();
 
             Dispatcher.Invoke(() =>
             {
@@ -164,7 +164,7 @@ namespace AutoLiquid_ICF_Variable.Window
                     EllPistonHoming.Fill = status.IsPistonHoming ? BrushActive : BrushInactive;
                     EllCalibrating.Fill = status.IsCalibrating ? BrushActive : BrushInactive;
                 }
-                LblCurrentVolume.Content = volume.HasValue ? $"{volume.Value} µL" : "—— µL";
+                //LblCurrentVolume.Content = volume.HasValue ? $"{volume.Value} µL" : "—— µL";
             });
         }
 
@@ -199,7 +199,7 @@ namespace AutoLiquid_ICF_Variable.Window
             var status = await _ctrl.ReadStatusAsync();
             if (status != null)
                 AppendLog($"✅ 状态：{status}  " +
-                          $"[RAW S1=0x{status.RawLow:X2}  S2=0x{status.RawHigh:X2}]");
+                          $"[RAW Data1=0x{status.DATA1:X2}  Data2=0x{status.DATA2:X2}]");
             else
                 AppendLog("❌ 读取状态 失败");
             await RefreshStatusAsync();

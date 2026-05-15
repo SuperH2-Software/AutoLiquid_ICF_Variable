@@ -71,8 +71,6 @@ namespace AutoLiquid_ICF_Variable.Utils
 
         // 指令超时时间
         private static long CMD_TIMEOUT = 20000;
-        // 指令超时时间（离线调试模式）
-        private static long CMD_TIMEOUT_TEST = 2000;
 
         /// <summary>
         /// 初始化机器
@@ -84,31 +82,32 @@ namespace AutoLiquid_ICF_Variable.Utils
             if (isNeedManualStop) LogHelper.Info((string)Application.Current.FindResource("Init"), "");
 
             /**
-             * Z、P轴
+             * Z
              */
             var resetZ = ObjectUtils.GetMotionCmd(HEAD_Z_AXIS_LIST[0], EActType.I, "");
             resetZ += ParamsHelper.HeadList[1].Available ? "," + ObjectUtils.GetMotionCmd(HEAD_Z_AXIS_LIST[1], EActType.I, "") : "";
             var result1 = DoCmd(resetZ, isNeedManualStop);
-            var resetP = ParamsHelper.HeadList[0].PAvailable ? ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[0], EActType.I, "") : "";
-            resetP += ParamsHelper.HeadList[1].Available && ParamsHelper.HeadList[1].PAvailable ? "," + ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[1], EActType.I, "") : "";
-            // 如果移液头1用Q轴推脱板
-            if (ParamsHelper.HeadList[0].ReleaseTipUsePush && ParamsHelper.HeadList[0].ReleaseTipAxis == EAxis.Q)
-                resetP += "," + ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[1], EActType.I, "");
-            var result2 = DoCmd(resetP, isNeedManualStop);
-            // 第一次复位，多做一次复位指令。避免还没建立通信，复位不了
-            if (isFirstTimeInit)
-            {
-                result1 = DoCmd(resetZ, isNeedManualStop);
-                result2 = DoCmd(resetP, isNeedManualStop);
-            }
 
             /**
-             * 变距轴
+             * P 、变距轴
              */
-            var resetVariable = ParamsHelper.HeadList[0].IsVariable && (ParamsHelper.HeadList[0].ChannelRow > 1 || ParamsHelper.HeadList[0].ChannelCol > 1) ? ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[0], EActType.I, "") : "";
-            resetVariable += ParamsHelper.HeadList[1].Available && ParamsHelper.HeadList[1].IsVariable && (ParamsHelper.HeadList[1].ChannelRow > 1 || ParamsHelper.HeadList[1].ChannelCol > 1) ? "," + ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[1], EActType.I, "") : "";
-            var result3 = DoCmd(resetVariable, isNeedManualStop);
-
+            // 如果是变距，就用罗恩变距移液器
+            var result2 = true;
+            var result3 = true;
+            if (ParamsHelper.HeadList[0].IsVariable)
+            {
+                // TODO
+            }
+            else
+            {
+                var resetP = ParamsHelper.HeadList[0].PAvailable ? ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[0], EActType.I, "") : "";
+                resetP += ParamsHelper.HeadList[1].Available && ParamsHelper.HeadList[1].PAvailable ? "," + ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[1], EActType.I, "") : "";
+                // 如果移液头1用Q轴推脱板
+                if (ParamsHelper.HeadList[0].ReleaseTipUsePush && ParamsHelper.HeadList[0].ReleaseTipAxis == EAxis.Q)
+                    resetP += "," + ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[1], EActType.I, "");
+                result2 = DoCmd(resetP, isNeedManualStop);
+            }
+     
             /**
              * X、Y轴
              */
