@@ -24,7 +24,8 @@ namespace AutoLiquid_ICF_Variable.Window
     public partial class WindowVariablePitchDebug : MetroWindow
     {
         // ── 字段 ─────────────────────────────────────────────
-        private VariablePitchController _ctrl;
+        // 直接通过属性访问全局单例
+        private VariablePitchController _ctrl => VariablePitchManager.Controller;
         private DispatcherTimer _autoRefreshTimer;
         private readonly StringBuilder _logBuilder = new StringBuilder();
 
@@ -48,7 +49,14 @@ namespace AutoLiquid_ICF_Variable.Window
                     await RefreshStatusAsync();
             };
 
-            this.Loaded += (s, e) => Utils.ViewUtils.ShowLogo(this);
+            // 窗口打开时，同步主程序已连接的状态
+            this.Loaded += (s, e) =>
+            {
+                Utils.ViewUtils.ShowLogo(this);
+                SetConnectedState(VariablePitchManager.IsReady);
+                if (VariablePitchManager.IsReady)
+                    AppendLog($"✅ 已连接（主程序自动连接）  设备ID=0x{_ctrl.DeviceId:X2}");
+            };
         }
 
         // ════════════════════════════════════════════════════
@@ -85,9 +93,9 @@ namespace AutoLiquid_ICF_Variable.Window
             // ★ 套上日志装饰器，发送/接收自动打印 16 进制原始帧
             canBus = new LoggingCanBus(canBus, AppendLog);
 
-            _ctrl?.Dispose();
-            _ctrl = new VariablePitchController(canBus, deviceId);
-            bool ok = _ctrl.Connect();
+            // ★ 通过 VariablePitchManager 统一初始化，替换旧 Controller
+            VariablePitchManager.Initialize(canBus, deviceId);
+            bool ok = VariablePitchManager.Controller.Connect();
 
             if (ok)
             {
@@ -105,9 +113,10 @@ namespace AutoLiquid_ICF_Variable.Window
         {
             _autoRefreshTimer.Stop();
             TglAutoRefresh.IsOn = false;
+
+            // ★ 只断开连接，不 Dispose/Release（生命周期由 MainWindow 管理）
             _ctrl?.Disconnect();
-            _ctrl?.Dispose();
-            _ctrl = null;
+
             SetConnectedState(false);
             ResetStatusLights();
             AppendLog("🔌 已断开连接");
@@ -357,9 +366,8 @@ namespace AutoLiquid_ICF_Variable.Window
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            // 只停定时器，不 Disconnect/Dispose，生命周期由 MainWindow 统一管理
             _autoRefreshTimer?.Stop();
-            _ctrl?.Disconnect();
-            _ctrl?.Dispose();
         }
 
         // ════════════════════════════════════════════════════

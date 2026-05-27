@@ -84,9 +84,12 @@ namespace AutoLiquid_ICF_Variable.Window
             this.GroupBoxReleaseTip.Content = new ControlSettingReleaseTip(this.mHeadIndex);
 
             /**
-             * 体积设置
+             * 体积设置（可变距移液隐藏）
              */
-            this.GroupBoxVolume.Content = new ControlSettingVolume(this.mHeadIndex);
+            if (!ParamsHelper.HeadList[this.mHeadIndex].IsVariable)
+                this.GroupBoxVolume.Content = new ControlSettingVolume(this.mHeadIndex);
+            else
+                this.GroupBoxVolume.Visibility = Visibility.Collapsed;
 
             /**
              * 速度设置
@@ -121,7 +124,8 @@ namespace AutoLiquid_ICF_Variable.Window
                     this.BtnResetQ.Visibility = Visibility.Collapsed;
                 // 如果移液头没有可变距，隐藏可变距相关属性
                 if (ParamsHelper.HeadList[this.mHeadIndex].IsVariable && (ParamsHelper.HeadList[this.mHeadIndex].ChannelRow > 1 || ParamsHelper.HeadList[this.mHeadIndex].ChannelCol > 1))
-                    this.BtnResetW.Visibility = Visibility.Visible;
+                    //this.BtnResetW.Visibility = Visibility.Visible;
+                    this.BtnResetW.Visibility = Visibility.Collapsed;
                 else
                     this.BtnResetW.Visibility = Visibility.Collapsed;
 

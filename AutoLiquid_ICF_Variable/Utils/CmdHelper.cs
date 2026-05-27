@@ -1,9 +1,10 @@
-﻿using AutoLiquid_Library.Enum;
-using AutoLiquid_Library.Exceptions;
-using AutoLiquid_Library.Utils;
-using AutoLiquid_ICF_Variable;
+﻿using AutoLiquid_ICF_Variable;
 using AutoLiquid_ICF_Variable.EntityCommon;
 using AutoLiquid_ICF_Variable.EntityJson;
+using AutoLiquid_ICF_Variable.VariablePitch;
+using AutoLiquid_Library.Enum;
+using AutoLiquid_Library.Exceptions;
+using AutoLiquid_Library.Utils;
 using ControlzEx.Standard;
 using Serilog;
 using System;
@@ -39,9 +40,9 @@ namespace AutoLiquid_ICF_Variable.Utils
         private static List<string> HEAD_Y_AXIS_LIST = new List<string> { "Y", "Y" };
         // 移液头上下轴列表
         private static List<string> HEAD_Z_AXIS_LIST = new List<string> { "Z", "W" };
-        // 移液头喷液轴列表
+        // 移液头喷液轴列表（超氢）
         public static List<string> HEAD_P_AXIS_LIST = new List<string> { "P", "Q" };
-        // 移液头变距轴列表
+        // 移液头变距轴列表（超氢）
         public static List<string> HEAD_Variable_AXIS_LIST = new List<string> { "W", "W" };
 
         // 盘位位置偏移值（包括盘面和退枪头卡位）
@@ -96,7 +97,7 @@ namespace AutoLiquid_ICF_Variable.Utils
             var result3 = true;
             if (ParamsHelper.HeadList[0].IsVariable)
             {
-                // TODO
+                result2 = VariablePitchManager.PistonHome();
             }
             else
             {
@@ -107,7 +108,7 @@ namespace AutoLiquid_ICF_Variable.Utils
                     resetP += "," + ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[1], EActType.I, "");
                 result2 = DoCmd(resetP, isNeedManualStop);
             }
-     
+
             /**
              * X、Y轴
              */
@@ -283,6 +284,8 @@ namespace AutoLiquid_ICF_Variable.Utils
            * 获取所有可变值
            */
             var commonSetting = ParamsHelper.CommonSettingList[headUsedIndex];
+            // 是否可变距
+            var isVariable = ParamsHelper.HeadList[headUsedIndex].IsVariable;
             // 行走高度
             var normalHeight = consumableType.NormalHeight > consumableTypeNext.NormalHeight ? consumableTypeNext.NormalHeight : consumableType.NormalHeight;
             // 跨耗材行走高度复位
@@ -339,6 +342,10 @@ namespace AutoLiquid_ICF_Variable.Utils
             // 记录 jetOffset 的数量，后续做除法前必须检查 > 0
             var jetOffsetCount = seq?.JetOffsetList != null ? seq.JetOffsetList.Count : 0;
             liquidVolume += jetOffsetVolumeTotal;
+            // 变距模块吸液速度
+            var absorbSpeedVariable = consumableType.AbsorbSpeedVariable;
+            // 变距模块喷液速度
+            var jetSpeedVariable = consumableType.JetSpeedVariable;
             // 吸前混合速度
             var absorbMixingSpeed = consumableType.AbsorbMixingSpeed;
             // P默认速度
@@ -369,8 +376,11 @@ namespace AutoLiquid_ICF_Variable.Utils
                 if (absorbAirBefore > 0)
                     Ps(headUsedIndex, absorbAirBefore, true);
 
-                if (!absorbMixingSpeed.Equals(""))
-                    SpeedSet(headUsedIndex, EAxis.P, absorbMixingSpeed, 100, true);
+                if (isVariable)
+                    VariablePitchManager.SetSpeed(absorbSpeedVariable, jetSpeedVariable);
+                else
+                    if (!absorbMixingSpeed.Equals(""))
+                        SpeedSet(headUsedIndex, EAxis.P, absorbMixingSpeed, 100, true);
 
                 // 混合高度
                 GotoHeight(headUsedIndex, absorbMixingHeight, EOffsetType.Template, true);
@@ -404,7 +414,7 @@ namespace AutoLiquid_ICF_Variable.Utils
                 }
 
                 // 恢复用户设置的速度
-                if (!absorbMixingSpeed.Equals(""))
+                if (!absorbMixingSpeed.Equals("") && !isVariable)
                     SpeedSet(headUsedIndex, EAxis.P, defaultPSpeed, pSpeedPercent, true);
             }
 
@@ -427,8 +437,11 @@ namespace AutoLiquid_ICF_Variable.Utils
             GotoHeight(headUsedIndex, liquidAbsorbHeight, EOffsetType.Template, true);
 
             // 吸液速度
-            if (!absorbSpeed.Equals(""))
-                SpeedSet(headUsedIndex, EAxis.P, absorbSpeed, 100, true);
+            if (isVariable)
+                VariablePitchManager.SetSpeed(absorbSpeedVariable, jetSpeedVariable);
+            else
+                if (!absorbSpeed.Equals(""))
+                    SpeedSet(headUsedIndex, EAxis.P, absorbSpeed, 100, true);
 
             // 吸液体积
             if (serialDilute)
@@ -471,11 +484,14 @@ namespace AutoLiquid_ICF_Variable.Utils
             // 吸液等待
             Thread.Sleep((int)(liquidAbsorbDelay * 1000));
             // 吸后反喷体积
-            if (reverseJetAfterAbsorb > 0 && liquidVolume > 0 && !serialDilute)
-                Ps(headUsedIndex, reverseJetAfterAbsorb * -1, true);
+            if (isVariable)
+                VariablePitchManager.SetSpeed(absorbSpeedVariable, jetSpeedVariable);
+            else
+                if (reverseJetAfterAbsorb > 0 && liquidVolume > 0 && !serialDilute)
+                    Ps(headUsedIndex, reverseJetAfterAbsorb * -1, true);
 
             // 恢复用户设置的速度
-            if (!absorbSpeed.Equals(""))
+            if (!absorbSpeed.Equals("") && !isVariable)
                 SpeedSet(headUsedIndex, EAxis.P, defaultPSpeed, pSpeedPercent, true);
 
             // 更新移液头状态信息
@@ -574,6 +590,13 @@ namespace AutoLiquid_ICF_Variable.Utils
              * 获取所有可变值
              */
             var commonSetting = ParamsHelper.CommonSettingList[headUsedIndex];
+            // 是否可变距
+            var isVariable = ParamsHelper.HeadList[headUsedIndex].IsVariable;
+            // 可变距吸液速度
+            var absorbSpeedVariable = consumableType.AbsorbSpeedVariable;
+            // 可变距喷液速度
+            var jetSpeedVariable = consumableType.JetSpeedVariable;
+
             // 量程
             var headLiquidRangeReal = Convert.ToDecimal((int)ParamsHelper.HeadList[headUsedIndex].HeadLiquidRange);
             // 行走高度
@@ -657,8 +680,11 @@ namespace AutoLiquid_ICF_Variable.Utils
             // 是否分段喷液
             var isJetSeparate = volumeJet2 > 0 && liquidVolume > volumeJet2;
             // 喷液速度
-            if (!jetSpeed.Equals(""))
-                SpeedSet(headUsedIndex, EAxis.P, jetSpeed, 100, true);
+            if (isVariable)
+                VariablePitchManager.SetSpeed(absorbSpeedVariable, jetSpeedVariable);
+            else
+                if (!jetSpeed.Equals(""))
+                    SpeedSet(headUsedIndex, EAxis.P, jetSpeed, 100, true);
 
             // 校准后喷液体积
             if (multiCalibration.Available)
@@ -708,7 +734,7 @@ namespace AutoLiquid_ICF_Variable.Utils
             }
 
             // 恢复用户设置的速度
-            if (!jetSpeed.Equals(""))
+            if (!jetSpeed.Equals("") && !isVariable)
                 SpeedSet(headUsedIndex, EAxis.P, defaultPSpeed, pSpeedPercent, true);
 
             /**
@@ -716,8 +742,11 @@ namespace AutoLiquid_ICF_Variable.Utils
              */
             if (jetMixingNeed)
             {
-                if (!jetMixingSpeed.Equals(""))
-                    SpeedSet(headUsedIndex, EAxis.P, jetMixingSpeed, 100, true);
+                if (isVariable)
+                    VariablePitchManager.SetSpeed(absorbSpeedVariable, jetSpeedVariable);
+                else
+                    if (!jetMixingSpeed.Equals(""))
+                        SpeedSet(headUsedIndex, EAxis.P, jetMixingSpeed, 100, true);
 
                 // 混合高度
                 GotoHeight(headUsedIndex, jetMixingHeight, EOffsetType.Template, true);
@@ -752,7 +781,7 @@ namespace AutoLiquid_ICF_Variable.Utils
                 }
 
                 // 恢复用户设置的速度
-                if (!jetMixingSpeed.Equals(""))
+                if (!jetMixingSpeed.Equals("") && !isVariable)
                     SpeedSet(headUsedIndex, EAxis.P, defaultPSpeed, pSpeedPercent, true);
             }
 
@@ -816,6 +845,12 @@ namespace AutoLiquid_ICF_Variable.Utils
              * 获取所有可变值
              */
             var commonSetting = ParamsHelper.CommonSettingList[headUsedIndex];
+            // 是否可变距
+            var isVariable = ParamsHelper.HeadList[headUsedIndex].IsVariable;
+            // 可变距吸液速度
+            var absorbSpeedVariable = consumableType.AbsorbSpeedVariable;
+            // 可变距喷液速度
+            var jetSpeedVariable = consumableType.JetSpeedVariable;
             // 盘内行走高度
             var normalHeightInner = consumableType.NormalHeight;
             // 盘外行走高度
@@ -930,8 +965,11 @@ namespace AutoLiquid_ICF_Variable.Utils
                 GotoHole(headUsedIndex, consumableType, templateIndex, holeIndex, true);
 
                 // 喷液速度
-                if (!jetSpeed.Equals(""))
-                    SpeedSet(headUsedIndex, EAxis.P, jetSpeed, 100, true);
+                if (isVariable)
+                    VariablePitchManager.SetSpeed(absorbSpeedVariable, jetSpeedVariable);
+                else
+                    if (!jetSpeed.Equals(""))
+                        SpeedSet(headUsedIndex, EAxis.P, jetSpeed, 100, true);
 
                 // 校准后喷液体积
                 if (multiCalibration.Available)
@@ -1022,7 +1060,7 @@ namespace AutoLiquid_ICF_Variable.Utils
                 }
 
                 // 恢复用户设置的速度
-                if (!jetSpeed.Equals(""))
+                if (!jetSpeed.Equals("") && !isVariable)
                     SpeedSet(headUsedIndex, EAxis.P, defaultPSpeed, pSpeedPercent, true);
 
                 /**
@@ -1030,8 +1068,11 @@ namespace AutoLiquid_ICF_Variable.Utils
                  */
                 if (serialDilute)
                 {
-                    if (!jetMixingSpeed.Equals(""))
-                        SpeedSet(headUsedIndex, EAxis.P, jetMixingSpeed, 100, true);
+                    if (isVariable)
+                        VariablePitchManager.SetSpeed(absorbSpeedVariable, jetSpeedVariable);
+                    else
+                        if (!jetMixingSpeed.Equals(""))
+                            SpeedSet(headUsedIndex, EAxis.P, jetMixingSpeed, 100, true);
 
                     // 混合高度
                     GotoHeight(headUsedIndex, jetMixingHeight, EOffsetType.Template, true);
@@ -1058,7 +1099,7 @@ namespace AutoLiquid_ICF_Variable.Utils
                     }
 
                     // 恢复用户设置的速度
-                    if (!jetMixingSpeed.Equals(""))
+                    if (!jetMixingSpeed.Equals("") && !isVariable)
                         SpeedSet(headUsedIndex, EAxis.P, defaultPSpeed, pSpeedPercent, true);
                 }
 
@@ -1465,10 +1506,11 @@ namespace AutoLiquid_ICF_Variable.Utils
              */
             if (isVariableDistance)
             {
-                if (!releaseTipUsePush && commonSetting.ReleaseTipVariableDistanceStep != 0)
-                    Wa(headUsedIndex, commonSetting.ReleaseTipVariableDistanceStep, isNeedManualStop);
-                else
-                    Wa(headUsedIndex, commonSetting.Consumables[0].VariableDistanceStep, isNeedManualStop);
+                //if (!releaseTipUsePush && commonSetting.ReleaseTipVariableDistanceStep != 0)
+                //    Wa(headUsedIndex, commonSetting.ReleaseTipVariableDistanceStep, isNeedManualStop);
+                //else
+                //Wa(headUsedIndex, commonSetting.Consumables[0].VariableDistanceStep, isNeedManualStop);
+                Wa(headUsedIndex, commonSetting.Consumables[0].VariableDistanceMm, isNeedManualStop);
             }
 
 
@@ -1526,32 +1568,43 @@ namespace AutoLiquid_ICF_Variable.Utils
                 SpeedSet(headUsedIndex, EAxis.Z, defaultZSpeed, zSpeedPercent, isNeedManualStop);
 
             // 退枪头（推脱板方式）
-            if (ParamsHelper.HeadList[headUsedIndex].ReleaseTipUsePush)
+            var releaseTipUsePushCount = ParamsHelper.HeadList[headUsedIndex].ReleaseTipUsePushCount;
+            if (ParamsHelper.HeadList[headUsedIndex].IsVariable)
             {
-                // 退枪头速度（推脱板方式）
-                if (needSetReleaseTipSpeed)
-                    SpeedSet(headUsedIndex, EAxis.P, releaseTipSpeedCmd, 100, isNeedManualStop);
-
-                var releaseTipUsePushCount = ParamsHelper.HeadList[headUsedIndex].ReleaseTipUsePushCount;
-                // 重复两次，避免枪头退不了
                 for (var i = 0; i < releaseTipUsePushCount; i++)
                 {
-                    // 移液头1且推脱板为Q轴
-                    if (headUsedIndex == 0 && ParamsHelper.HeadList[headUsedIndex].ReleaseTipAxis == EAxis.Q)
-                    {
-                        Pa(1, releaseTipOffset, isNeedManualStop);
-                        Pa(1, 0, isNeedManualStop);
-                    }
-                    else
-                    {
-                        Pa(headUsedIndex, releaseTipOffset, isNeedManualStop);
-                        Pa(headUsedIndex, 0, isNeedManualStop);
-                    }
+                    VariablePitchManager.ReleaseTip();
                 }
+            }
+            else
+            {
+                if (ParamsHelper.HeadList[headUsedIndex].ReleaseTipUsePush)
+                {
+                    // 退枪头速度（推脱板方式）
+                    if (needSetReleaseTipSpeed)
+                        SpeedSet(headUsedIndex, EAxis.P, releaseTipSpeedCmd, 100, isNeedManualStop);
 
-                // 恢复Z速度（推脱板方式）
-                if (needSetReleaseTipSpeed)
-                    SpeedSet(headUsedIndex, EAxis.P, defaultPSpeed, pSpeedPercent, isNeedManualStop);
+
+                    // 重复两次，避免枪头退不了
+                    for (var i = 0; i < releaseTipUsePushCount; i++)
+                    {
+                        // 移液头1且推脱板为Q轴
+                        if (headUsedIndex == 0 && ParamsHelper.HeadList[headUsedIndex].ReleaseTipAxis == EAxis.Q)
+                        {
+                            Pa(1, releaseTipOffset, isNeedManualStop);
+                            Pa(1, 0, isNeedManualStop);
+                        }
+                        else
+                        {
+                            Pa(headUsedIndex, releaseTipOffset, isNeedManualStop);
+                            Pa(headUsedIndex, 0, isNeedManualStop);
+                        }
+                    }
+
+                    // 恢复Z速度（推脱板方式）
+                    if (needSetReleaseTipSpeed)
+                        SpeedSet(headUsedIndex, EAxis.P, defaultPSpeed, pSpeedPercent, isNeedManualStop);
+                }
             }
 
             // 退枪头后指令
@@ -1615,7 +1668,9 @@ namespace AutoLiquid_ICF_Variable.Utils
             // 是否可变距
             var isVariableDistance = ParamsHelper.HeadList[headUsedIndex].IsVariable && (ParamsHelper.HeadList[headUsedIndex].ChannelRow > 1 || ParamsHelper.HeadList[headUsedIndex].ChannelCol > 1);
             // 变距步数
-            var variableDistanceStep = consumableType.VariableDistanceStep;
+            //var variableDistanceStep = consumableType.VariableDistanceStep;
+            // 变距毫米
+            var variableDistanceMm = consumableType.VariableDistanceMm;
 
             // 是否变距
             if (isVariableDistance)
@@ -1624,9 +1679,9 @@ namespace AutoLiquid_ICF_Variable.Utils
                 if (ParamsHelper.HeadList[headUsedIndex].VariableMoveSameTime)
                 {
                     if (ParamsHelper.HeadList[headUsedIndex].YAvailable)
-                        XaYaWa(headUsedIndex, pos.X, pos.Y, variableDistanceStep, EOffsetType.Template, isNeedManualStop);
+                        XaYaWa(headUsedIndex, pos.X, pos.Y, variableDistanceMm, EOffsetType.Template, isNeedManualStop);
                     else
-                        XaWa(headUsedIndex, pos.X, variableDistanceStep, EOffsetType.Template, isNeedManualStop);
+                        XaWa(headUsedIndex, pos.X, variableDistanceMm, EOffsetType.Template, isNeedManualStop);
                 }
 
                 else
@@ -1635,7 +1690,7 @@ namespace AutoLiquid_ICF_Variable.Utils
                         XaYa(headUsedIndex, pos.X, pos.Y, EOffsetType.Template, isNeedManualStop);
                     else
                         Xa(headUsedIndex, pos.X, EOffsetType.Template, isNeedManualStop);
-                    Wa(headUsedIndex, variableDistanceStep, isNeedManualStop);
+                    Wa(headUsedIndex, variableDistanceMm, isNeedManualStop);
                 }
             }
             else
@@ -1914,11 +1969,12 @@ namespace AutoLiquid_ICF_Variable.Utils
         /// <param name="y"></param>
         /// <param name="offsetType">偏移类型</param>
         /// <param name="isNeedManualStop"></param>
-        public static bool XaYaWa(int headUsedIndex, decimal x, decimal y, int w, EOffsetType offsetType = EOffsetType.Template, bool isNeedManualStop = false)
+        public static bool XaYaWa(int headUsedIndex, decimal x, decimal y, decimal w, EOffsetType offsetType = EOffsetType.Template, bool isNeedManualStop = false)
         {
             var cmd = "";
             var resultX = true;
             var resultY = true;
+            var resultW = true;
             if (offsetType == EOffsetType.Template || offsetType == EOffsetType.ReleaseTip)
             {
                 x += offsetTemplate.X;
@@ -1929,19 +1985,41 @@ namespace AutoLiquid_ICF_Variable.Utils
             {
                 cmd = ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2"));
                 resultX = DoCmd(cmd, isNeedManualStop);
-                cmd = ObjectUtils.GetMotionCmd(HEAD_Y_AXIS_LIST[headUsedIndex], EActType.A, y.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString("F2"));
-                resultY = DoCmd(cmd, isNeedManualStop);
-                return resultX && resultY;
+                //cmd = ObjectUtils.GetMotionCmd(HEAD_Y_AXIS_LIST[headUsedIndex], EActType.A, y.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString("F2"));
+                //resultY = DoCmd(cmd, isNeedManualStop);
+                //return resultX && resultY;
+                cmd = ObjectUtils.GetMotionCmd(HEAD_Y_AXIS_LIST[headUsedIndex], EActType.A, y.ToString("F2"));
+                Parallel.Invoke(
+                    () => { resultY = DoCmd(cmd, isNeedManualStop); },
+                    () => { resultW = VariablePitchManager.SetPitch((double)w); }
+                );
+                return resultX && resultY && resultW;
             }
             if (ParamsHelper.HeadList[headUsedIndex].WalkingLogic == EWalkingLogic.YFirst)
             {
                 cmd = ObjectUtils.GetMotionCmd(HEAD_Y_AXIS_LIST[headUsedIndex], EActType.A, y.ToString("F2"));
                 resultY = DoCmd(cmd, isNeedManualStop);
-                cmd = ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString("F2"));
-                resultX = DoCmd(cmd, isNeedManualStop);
-                return resultX && resultY;
+                //cmd = ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString("F2"));
+                //resultX = DoCmd(cmd, isNeedManualStop);
+                //return resultX && resultY;
+                cmd = ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2"));
+                Parallel.Invoke(
+                    () => { resultX = DoCmd(cmd, isNeedManualStop); },
+                    () => { resultW = VariablePitchManager.SetPitch((double)w); }
+                );
+                return resultX && resultY && resultW;
             }
-            return DoCmd(ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Y_AXIS_LIST[headUsedIndex], EActType.A, y.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString("F2")), isNeedManualStop);
+            // 同时模式：X、Y 同时发，变距并行
+            //return DoCmd(ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Y_AXIS_LIST[headUsedIndex], EActType.A, y.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString("F2")), isNeedManualStop);
+            bool resultW3 = true;
+            bool resultXY = true;
+            var xyCmd = ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Y_AXIS_LIST[headUsedIndex], EActType.A, y.ToString("F2"));
+            Parallel.Invoke(
+                () => { resultXY = DoCmd(xyCmd, isNeedManualStop); },
+                () => { resultW3 = VariablePitchManager.SetPitch((double)w); }
+            );
+            return resultXY && resultW3;
+
         }
 
         /// <summary>
@@ -1949,13 +2027,23 @@ namespace AutoLiquid_ICF_Variable.Utils
         /// </summary>
         /// <param name="headUsedIndex">移液头Index</param>
         /// <param name="x"></param>
+        /// <param name="w"></param>
         /// <param name="offsetType">偏移类型</param>
         /// <param name="isNeedManualStop"></param>
-        public static bool XaWa(int headUsedIndex, decimal x, int w, EOffsetType offsetType = EOffsetType.Template, bool isNeedManualStop = false)
+        public static bool XaWa(int headUsedIndex, decimal x, decimal w, EOffsetType offsetType = EOffsetType.Template, bool isNeedManualStop = false)
         {
             if (offsetType == EOffsetType.Template || offsetType == EOffsetType.ReleaseTip)
                 x += offsetTemplate.X;
-            return DoCmd(ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString("F2")), isNeedManualStop);
+            //return DoCmd(ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2")) + "," + ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString("F2")), isNeedManualStop);
+
+            bool resultW = true;
+            bool resultX = true;
+            var cmd = ObjectUtils.GetMotionCmd(HEAD_X_AXIS_LIST[headUsedIndex], EActType.A, x.ToString("F2"));
+            Parallel.Invoke(
+                () => { resultX = DoCmd(cmd, isNeedManualStop); },
+                () => { resultW = VariablePitchManager.SetPitch((double)w); }
+            );
+            return resultX && resultW;
         }
 
         /// <summary>
@@ -1968,8 +2056,17 @@ namespace AutoLiquid_ICF_Variable.Utils
         {
             if (ParamsHelper.HeadList[headUsedIndex].PAvailable)
             {
-                var cmd = ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[headUsedIndex], EActType.A, p.ToString("F2"));
-                return DoCmd(cmd, isNeedManualStop);
+                if (ParamsHelper.HeadList[headUsedIndex].IsVariable)
+                {
+                    // 如果p =0，代表全部喷出，相当于罗恩可变距的复位
+                    if (p == 0)
+                        VariablePitchManager.PistonHome();
+                }
+                else
+                {
+                    var cmd = ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[headUsedIndex], EActType.A, p.ToString("F2"));
+                    return DoCmd(cmd, isNeedManualStop);
+                }
             }
 
             return true;
@@ -1985,8 +2082,19 @@ namespace AutoLiquid_ICF_Variable.Utils
         {
             if (ParamsHelper.HeadList[headUsedIndex].PAvailable)
             {
-                var cmd = ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[headUsedIndex], EActType.S, p.ToString("F2"));
-                return DoCmd(cmd, isNeedManualStop);
+                if (ParamsHelper.HeadList[headUsedIndex].IsVariable)
+                {
+                    // 正数代表吸液，负数代表喷液
+                    if (p > 0)
+                        VariablePitchManager.Aspirate(int.Parse(p.ToString()));
+                    else
+                        VariablePitchManager.Dispense(int.Parse((p * -1).ToString()));
+                }
+                else
+                {
+                    var cmd = ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[headUsedIndex], EActType.S, p.ToString("F2"));
+                    return DoCmd(cmd, isNeedManualStop);
+                }
             }
 
             return true;
@@ -2001,8 +2109,15 @@ namespace AutoLiquid_ICF_Variable.Utils
         {
             if (ParamsHelper.HeadList[headUsedIndex].PAvailable)
             {
-                var cmd = ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[headUsedIndex], EActType.I, "");
-                return DoCmd(cmd, isNeedManualStop);
+                if (ParamsHelper.HeadList[headUsedIndex].IsVariable)
+                {
+                    VariablePitchManager.PistonHome();
+                }
+                else
+                {
+                    var cmd = ObjectUtils.GetMotionCmd(HEAD_P_AXIS_LIST[headUsedIndex], EActType.I, "");
+                    return DoCmd(cmd, isNeedManualStop);
+                }
             }
 
             return true;
@@ -2014,10 +2129,12 @@ namespace AutoLiquid_ICF_Variable.Utils
         /// <param name="headUsedIndex">移液头Index</param>
         /// <param name="w"></param>
         /// <param name="isNeedManualStop"></param>
-        public static bool Wa(int headUsedIndex, int w, bool isNeedManualStop = false)
+        public static bool Wa(int headUsedIndex, decimal w, bool isNeedManualStop = false)
         {
-            var cmd = ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString());
-            return DoCmd(cmd, isNeedManualStop);
+            //var cmd = ObjectUtils.GetMotionCmd(HEAD_Variable_AXIS_LIST[headUsedIndex], EActType.A, w.ToString());
+            //return DoCmd(cmd, isNeedManualStop);
+
+            return VariablePitchManager.SetPitch((double)w);
         }
 
         /// <summary>
@@ -2051,7 +2168,7 @@ namespace AutoLiquid_ICF_Variable.Utils
                 if (ParamsHelper.HeadList[headUsedIndex].YAvailable)
                     SpeedSetSub(HEAD_Y_AXIS_LIST[headUsedIndex], commonSetting.DefaultYSpeed, commonSetting.YSpeedPercent, isNeedManualStop);
                 SpeedSetSub(HEAD_Z_AXIS_LIST[headUsedIndex], commonSetting.DefaultZSpeed, commonSetting.ZSpeedPercent, isNeedManualStop);
-                if (ParamsHelper.HeadList[headUsedIndex].PAvailable)
+                if (ParamsHelper.HeadList[headUsedIndex].PAvailable && !ParamsHelper.HeadList[headUsedIndex].IsVariable)
                     SpeedSetSub(HEAD_P_AXIS_LIST[headUsedIndex], commonSetting.DefaultPSpeed, commonSetting.PSpeedPercent, isNeedManualStop);
             }
             else if (axis == EAxis.X)
@@ -2068,7 +2185,7 @@ namespace AutoLiquid_ICF_Variable.Utils
             }
             else if (axis == EAxis.P)
             {
-                if (ParamsHelper.HeadList[headUsedIndex].PAvailable)
+                if (ParamsHelper.HeadList[headUsedIndex].PAvailable && !ParamsHelper.HeadList[headUsedIndex].IsVariable)
                     SpeedSetSub(HEAD_P_AXIS_LIST[headUsedIndex], speedCmd, speedPercent, isNeedManualStop);
             }
         }

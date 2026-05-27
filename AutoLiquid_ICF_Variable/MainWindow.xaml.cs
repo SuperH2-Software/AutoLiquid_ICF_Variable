@@ -126,6 +126,9 @@ namespace AutoLiquid_ICF_Variable
             // 网络通信
             CanNet();
 
+            // 自动初始化并连接变距移液模块
+            InitVariablePitch();
+
             // 初始化控件
             InitWidget();
 
@@ -163,6 +166,9 @@ namespace AutoLiquid_ICF_Variable
             CmdHelper.frmDAE.Close();
 
             connectTimer?.Close();
+
+            // ★释放变距移液模块资源
+            VariablePitch.VariablePitchManager.Release();
         }
 
         /// <summary>
@@ -203,6 +209,27 @@ namespace AutoLiquid_ICF_Variable
                 if (ParamsHelper.IO.WarningLightAvailable)
                     CmdHelper.WarningLightOn(EWarningLight.Red, false);
             }
+        }
+
+        /// <summary>
+        /// 自动初始化并连接变距移液模块
+        /// 取第一个 IsVariable=true 的移液头的 VariableCanDeviceId 作为 CAN ID
+        /// </summary>
+        private void InitVariablePitch()
+        {
+            var head = ParamsHelper.HeadList.FirstOrDefault(h => h.IsVariable);
+            if (head == null) return;   // 无可变距头，不初始化
+
+            var canBus = new VariablePitch.ZlgCanBus(
+                VariablePitch.ZlgDeviceType.UsbCan2,
+                deviceIndex: 0,
+                canChannel: 0);
+
+            VariablePitch.VariablePitchManager.Initialize(canBus, head.VariableCanDeviceId);
+            bool ok = VariablePitch.VariablePitchManager.Controller.Connect();
+
+            if (!ok)
+                LogHelper.Error("变距移液模块连接失败，请检查 USB-CAN 适配器及 controlcan.dll");
         }
 
         /// <summary>
@@ -631,6 +658,12 @@ namespace AutoLiquid_ICF_Variable
         /// </summary>
         public void InitWindowTitle()
         {
+            // 是否变距
+            if (!ParamsHelper.HeadList[0].IsVariable)
+                this.MenuItemVariablePitchDebug.Visibility = Visibility.Collapsed;
+            else
+                this.MenuItemVariablePitchDebug.Visibility = Visibility.Visible;
+
             var head1ChannelStr = "";
             var head1VariableStr = "";
             var head1RangeStr = "";
@@ -686,10 +719,6 @@ namespace AutoLiquid_ICF_Variable
         private void InitWidget()
         {
             ViewUtils.ShowLogo(this);
-
-            // 是否变距
-            if (!ParamsHelper.HeadList[0].IsVariable)
-                this.MenuItemVariablePitchDebug.Visibility = Visibility.Collapsed;
 
             // 移液头2是否可以设置
             if (!ParamsHelper.HeadList[1].Available)

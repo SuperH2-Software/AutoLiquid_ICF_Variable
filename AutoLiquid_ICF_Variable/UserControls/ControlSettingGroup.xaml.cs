@@ -145,6 +145,7 @@ namespace AutoLiquid_ICF_Variable.UserControls
 
             this.ControlLiquidAbsorbHeight.SetParam(mHeadIndex, this.mConsumable.LiquidAbsorbHeight, EAxis.Z);
             this.TextBoxAbsorbSpeedCmd.Text = this.mConsumable.AbsorbSpeed;
+            this.ComboBoxAbsorbSpeedVariable.SelectedIndex = (int)this.mConsumable.AbsorbSpeedVariable - 1;
             this.TextBoxLiquidAbsorbDelay.Text =
                 this.mConsumable.LiquidAbsorbDelay.ToString();
             this.TextBoxAbsorbHeight2NormalHeightSpeedCmd.Text = this.mConsumable.AbsorbHeight2NormalHeightSpeed;
@@ -154,6 +155,7 @@ namespace AutoLiquid_ICF_Variable.UserControls
 
             this.ControlLiquidJetHeight.SetParam(mHeadIndex, this.mConsumable.LiquidJetHeight, EAxis.Z);
             this.TextBoxJetSpeedCmd.Text = this.mConsumable.JetSpeed;
+            this.ComboBoxJetSpeedVariable.SelectedIndex = (int)this.mConsumable.JetSpeedVariable - 1;
             this.TextBoxLiquidJetDelay.Text = this.mConsumable.LiquidJetDelay.ToString();
             this.TextBoxJetHeight2NormalHeightSpeedCmd.Text = this.mConsumable.JetHeight2NormalHeightSpeed;
 
@@ -190,9 +192,32 @@ namespace AutoLiquid_ICF_Variable.UserControls
             {
                 this.GroupBoxVariableDistanceSetting.Visibility = Visibility.Visible;
                 this.TextBoxVariableDistanceStep.Text = this.mConsumable.VariableDistanceStep.ToString();
+                this.TextBoxVariableDistanceMm.Text = this.mConsumable.VariableDistanceMm.ToString();
             }
             else
                 this.GroupBoxVariableDistanceSetting.Visibility = Visibility.Collapsed;
+
+            // 可变距时更改设置设置
+            if (ParamsHelper.HeadList[this.mHeadIndex].IsVariable)
+            {
+                this.StackPanelAbsorbSpeedCmd.Visibility = Visibility.Collapsed;
+                this.StackPanelAbsorbSpeedVariable.Visibility = Visibility.Visible;
+                this.StackPanelJetSpeedCmd.Visibility = Visibility.Collapsed;
+                this.StackPanelJetSpeedVariable.Visibility = Visibility.Visible;
+                this.StackPanelAbsorbMixingSpeed.Visibility = Visibility.Collapsed;
+                this.StackPanelJetMixingSpeed.Visibility = Visibility.Collapsed;
+                this.StackPanelVariableDistanceStep.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                this.StackPanelAbsorbSpeedCmd.Visibility = Visibility.Visible;
+                this.StackPanelAbsorbSpeedVariable.Visibility = Visibility.Collapsed;
+                this.StackPanelJetSpeedCmd.Visibility = Visibility.Visible;
+                this.StackPanelJetSpeedVariable.Visibility = Visibility.Collapsed;
+                this.StackPanelAbsorbMixingSpeed.Visibility = Visibility.Visible;
+                this.StackPanelJetMixingSpeed.Visibility = Visibility.Visible;
+            }
+
 
             // 盘位设置
             this.CheckBoxAutoFill.IsChecked = this.mConsumable.HoleStartPosAutoFill;
@@ -214,6 +239,7 @@ namespace AutoLiquid_ICF_Variable.UserControls
 
             this.ControlLiquidAbsorbHeight.TextBoxPos.TextChanged += TextBoxOnTextChanged;
             this.TextBoxAbsorbSpeedCmd.TextChanged += TextBoxOnTextChanged;
+            this.ComboBoxAbsorbSpeedVariable.SelectionChanged += ComboBoxOnSelectionChanged;
             this.TextBoxLiquidAbsorbDelay.TextChanged += TextBoxOnTextChanged;
             this.TextBoxAbsorbHeight2NormalHeightSpeedCmd.TextChanged += TextBoxOnTextChanged;
             this.ControlAbsorbHeight2LiftingHeight.TextBoxPos.TextChanged += TextBoxOnTextChanged;
@@ -221,6 +247,7 @@ namespace AutoLiquid_ICF_Variable.UserControls
 
             this.ControlLiquidJetHeight.TextBoxPos.TextChanged += TextBoxOnTextChanged;
             this.TextBoxJetSpeedCmd.TextChanged += TextBoxOnTextChanged;
+            this.ComboBoxJetSpeedVariable.SelectionChanged += ComboBoxOnSelectionChanged;
             this.TextBoxLiquidJetDelay.TextChanged += TextBoxOnTextChanged;
             this.TextBoxJetHeight2NormalHeightSpeedCmd.TextChanged += TextBoxOnTextChanged;
 
@@ -252,6 +279,8 @@ namespace AutoLiquid_ICF_Variable.UserControls
             // 可变距设置
             this.TextBoxVariableDistanceStep.TextChanged += TextBoxOnTextChanged;
             this.BtnVariableDistanceStep.Click += BtnClick;
+            this.TextBoxVariableDistanceMm.TextChanged += TextBoxOnTextChanged;
+            this.BtnVariableDistanceMm.Click += BtnClick;
 
             // 盘位设置
             this.CheckBoxAutoFill.Checked += CheckBoxOnChecked;
@@ -332,6 +361,8 @@ namespace AutoLiquid_ICF_Variable.UserControls
             // 可变距设置
             else if (sender.Equals(this.TextBoxVariableDistanceStep))
                 DataHelper.SaveInt(this.mHeadIndex, this.TextBoxVariableDistanceStep.Text.Trim(), ref this.mConsumable.VariableDistanceStep);
+            else if (sender.Equals(this.TextBoxVariableDistanceMm))
+                DataHelper.SaveDecimal(this.mHeadIndex, this.TextBoxVariableDistanceMm.Text.Trim(), ref this.mConsumable.VariableDistanceMm);
 
             // 盘位设置
             else if (sender.Equals(this.TextBoxTemplateRowStep))
@@ -388,6 +419,10 @@ namespace AutoLiquid_ICF_Variable.UserControls
         {
             if (sender.Equals(this.ComboBoxTakeTipRepeatTime))
                 DataHelper.SaveInt(this.mHeadIndex, ((int)this.ComboBoxTakeTipRepeatTime.SelectedItem).ToString().Trim(), ref this.mConsumable.TakeTipRepeatTime);
+            else if (sender.Equals(this.ComboBoxAbsorbSpeedVariable))
+                DataHelper.SaveVariablePitchSpeed(this.mHeadIndex, this.ComboBoxAbsorbSpeedVariable.SelectedIndex + 1, ref this.mConsumable.AbsorbSpeedVariable);
+            else if (sender.Equals(this.ComboBoxJetSpeedVariable))
+                DataHelper.SaveVariablePitchSpeed(this.mHeadIndex, this.ComboBoxJetSpeedVariable.SelectedIndex + 1, ref this.mConsumable.JetSpeedVariable);
         }
 
         private void CheckBoxOnChecked(object sender, RoutedEventArgs e)
@@ -420,6 +455,18 @@ namespace AutoLiquid_ICF_Variable.UserControls
         {
             if (sender.Equals(this.BtnVariableDistanceStep))
                 CmdHelper.Wa(this.mHeadIndex, Int32.Parse(this.TextBoxVariableDistanceStep.Text), false);
+            else if (sender.Equals(this.BtnVariableDistanceMm))
+            {
+                try
+                {
+                    VariablePitch.VariablePitchManager.SetPitch(Double.Parse(this.TextBoxVariableDistanceMm.Text));
+                }
+                catch (ArgumentOutOfRangeException ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return;
+                }
+            }
         }
 
         private void RBtnOnChecked(object sender, RoutedEventArgs e)

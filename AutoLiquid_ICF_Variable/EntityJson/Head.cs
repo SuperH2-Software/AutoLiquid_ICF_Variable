@@ -20,7 +20,7 @@ namespace AutoLiquid_ICF_Variable.EntityJson
         /**
          * 可变距
          */
-        // 是否可变距（true=外挂变距模块，false=机器原始不变距模块）
+        // 是否可变距（true=罗恩变距模块，false=机器原始不变距模块）
         public bool IsVariable = false;
         // 变距是否与x、y轴同时运动
         public bool VariableMoveSameTime = true;

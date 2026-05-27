@@ -1,4 +1,5 @@
 ﻿using AutoLiquid_ICF_Variable.EntityJson;
+using AutoLiquid_ICF_Variable.Utils;
 using System;
 using System.Threading.Tasks;
 
@@ -26,6 +27,8 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         /// <summary>是否已初始化且连接</summary>
         public static bool IsReady => _controller?.IsConnected == true;
 
+        private static Head _head = ParamsHelper.HeadList[0];
+
         // ── 生命周期 ─────────────────────────────────────────
 
         /// <summary>
@@ -42,6 +45,7 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         /// <summary>释放资源（应用关闭时调用）</summary>
         public static void Release()
         {
+            _controller?.Disconnect();
             _controller?.Dispose();
             _controller = null;
         }
@@ -55,12 +59,11 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         /// </summary>
         /// <param name="head">移液头配置</param>
         /// <param name="targetPitchMm">目标间距(mm)；null 则使用 head.ChannelStep</param>
-        public static async Task<bool> SetPitchIfVariableAsync(Head head, double? targetPitchMm = null)
+        public static async Task<bool> SetPitchAsync(double targetPitchMm)
         {
-            if (!head.IsVariable) return true;
+            if (!_head.IsVariable) return true;
             EnsureReady();
-            double pitch = targetPitchMm ?? (double)head.ChannelStep;
-            return await _controller.SetPitchHalfStepAsync(pitch);
+            return await _controller.SetPitchHalfStepAsync(targetPitchMm);
         }
 
         /// <summary>
@@ -68,9 +71,9 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         /// IsVariable=false 返回 null，调用方走传统 P 轴
         /// </summary>
         /// <returns>剩余体积 µL；不变距或失败返回 null</returns>
-        public static async Task<int?> AspirateIfVariableAsync(Head head, int volumeUl)
+        public static async Task<int?> AspirateAsync(int volumeUl)
         {
-            if (!head.IsVariable) return null;
+            if (!_head.IsVariable) return null;
             EnsureReady();
             return await _controller.AspirateAsync(volumeUl);
         }
@@ -80,9 +83,9 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         /// IsVariable=false 返回 null，调用方走传统 P 轴
         /// </summary>
         /// <returns>剩余体积 µL；不变距或失败返回 null</returns>
-        public static async Task<int?> DispenseIfVariableAsync(Head head, int volumeUl)
+        public static async Task<int?> DispenseAsync(int volumeUl)
         {
-            if (!head.IsVariable) return null;
+            if (!_head.IsVariable) return null;
             EnsureReady();
             return await _controller.DispenseAsync(volumeUl);
         }
@@ -90,9 +93,9 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         /// <summary>
         /// 若 head.IsVariable 为 true，执行活塞回零（初始化/复位时调用）
         /// </summary>
-        public static async Task<bool> PistonHomeIfVariableAsync(Head head, int timeoutMs = 15000)
+        public static async Task<bool> PistonHomeAsync(int timeoutMs = 15000)
         {
-            if (!head.IsVariable) return true;
+            if (!_head.IsVariable) return true;
             EnsureReady();
             return await _controller.PistonHomeAsync(timeoutMs);
         }
@@ -100,12 +103,46 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         /// <summary>
         /// 若 head.IsVariable 为 true，执行松开枪头（退枪头时调用）
         /// </summary>
-        public static async Task<bool> ReleaseTipIfVariableAsync(Head head, int timeoutMs = 5000)
+        public static async Task<bool> ReleaseTipAsync(int timeoutMs = 5000)
         {
-            if (!head.IsVariable) return true;
+            if (!_head.IsVariable) return true;
             EnsureReady();
             return await _controller.ReleaseTipAsync(timeoutMs);
         }
+
+        /// <summary>
+        /// 若 head.IsVariable 为 true，设置吸排液速度
+        /// </summary>
+        public static async Task<bool> SetSpeedAsync(VariablePitchSpeed aspirateSpeed, VariablePitchSpeed dispenseSpeed, int timeoutMs = 2000)
+        {
+            if (!_head.IsVariable) return true;
+            EnsureReady();
+            return await _controller.SetSpeedAsync(aspirateSpeed, dispenseSpeed, timeoutMs);
+        }
+
+        /// <summary>变距（供 CmdHelper 直接调用）</summary>
+        public static bool SetPitch(double targetPitchMm)
+            => Task.Run(() => SetPitchAsync(targetPitchMm)).GetAwaiter().GetResult();
+
+        /// <summary>吸液（供 CmdHelper 直接调用）</summary>
+        public static int? Aspirate(int volumeUl)
+            => Task.Run(() => AspirateAsync( volumeUl)).GetAwaiter().GetResult();
+
+        /// <summary>排液（供 CmdHelper 直接调用）</summary>
+        public static int? Dispense(int volumeUl)
+            => Task.Run(() => DispenseAsync(volumeUl)).GetAwaiter().GetResult();
+
+        /// <summary>活塞回零（供 CmdHelper 直接调用）</summary>
+        public static bool PistonHome(int timeoutMs = 15000)
+            => Task.Run(() => PistonHomeAsync(timeoutMs)).GetAwaiter().GetResult();
+
+        /// <summary>松开枪头（供 CmdHelper 直接调用）</summary>
+        public static bool ReleaseTip(int timeoutMs = 5000)
+            => Task.Run(() => ReleaseTipAsync(timeoutMs)).GetAwaiter().GetResult();
+
+        /// <summary>设置吸排液速度（供 CmdHelper 直接调用）</summary>
+        public static bool SetSpeed(VariablePitchSpeed aspirateSpeed, VariablePitchSpeed dispenseSpeed, int timeoutMs = 2000)
+            => Task.Run(() => SetSpeedAsync(aspirateSpeed, dispenseSpeed, timeoutMs)).GetAwaiter().GetResult();
 
         // ── 私有辅助 ──────────────────────────────────────────
         private static void EnsureReady()

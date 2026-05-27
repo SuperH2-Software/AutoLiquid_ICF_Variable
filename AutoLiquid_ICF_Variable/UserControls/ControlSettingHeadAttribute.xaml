@@ -49,7 +49,7 @@
                     <Label Content="{StaticResource Col}" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                <StackPanel x:Name="StackPanelChannelStep" Orientation="Horizontal" Margin="10,0,0,0">
                     <Label HorizontalContentAlignment="Center" Content="{StaticResource ChannelStep}" Width="{StaticResource SettingTitleWidth}" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                     <Label Width="{StaticResource SettingColonWidth}" Content=":" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                     <ComboBox x:Name="ComboBoxChannelStep" Width="{StaticResource SettingValueWidth}" HorizontalContentAlignment="Center" FontSize="{StaticResource MahApps.Font.Size.Default}" SelectedIndex="0" >

@@ -17,7 +17,7 @@
         <StackPanel Orientation="Vertical" Margin="0,5,0,0">
             <!--退枪头方式-->
             <StackPanel Orientation="Horizontal">
-                <StackPanel x:Name="StackPanelOrientation" Orientation="Horizontal">
+                <StackPanel x:Name="StackPanelReleaseTipMethod" Orientation="Horizontal">
                     <Label HorizontalContentAlignment="Center" Content="{StaticResource ReleaseTipMethod}" Width="{StaticResource SettingTitleWidth}" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                     <Label Width="{StaticResource SettingColonWidth}" Content=":" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                     <RadioButton x:Name="RBtnReleaseTipMethodPush" GroupName="ReleaseTipMethod" Content="{StaticResource PlatePush}" FontSize="{StaticResource MahApps.Font.Size.Default}" VerticalAlignment="Center" IsChecked="True"/>
@@ -50,14 +50,6 @@
                         <Label Width="{StaticResource SettingColonWidth}" Content=":" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                         <local:ControlSettingPos x:Name="ControlReleaseTipOffset"/>
                     </StackPanel>
-                </StackPanel>
-                <!--退枪头变距-->
-                <StackPanel x:Name="StackPanelReleaseTipVariableDistanceStep" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
-                    <Label Width="{StaticResource SettingTitleWidth}" HorizontalContentAlignment="Center" Content="{StaticResource ReleaseTipVDistance}" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
-                    <Label Width="{StaticResource SettingColonWidth}" Content=":" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
-                    <TextBox x:Name="TextBoxReleaseTipVariableDistanceStep" Width="{StaticResource SettingValueWidth}" HorizontalContentAlignment="Center" Text="0" FontSize="{StaticResource MahApps.Font.Size.Default}" />
-                    <Label Width="{StaticResource SettingUnitWidth}" Content="{StaticResource Step}" HorizontalContentAlignment="Center" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
-                    <Button x:Name="BtnReleaseTipVariableDistanceStep" Content="{StaticResource Execute}" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Width="60" Height="30" FontSize="{StaticResource SettingBtnFontSize}"/>
                 </StackPanel>
             </StackPanel>
 
@@ -101,7 +93,7 @@
                 <!--是否退枪头后高度回零-->
                 <CheckBox x:Name="CheckBoxReleaseTipZa0After" Content="{StaticResource ReleaseTipZa0After}" FontSize="{StaticResource MahApps.Font.Size.Default}" Margin="25,0,0,0"/>
                 <!--退枪头速度-->
-                <StackPanel Orientation="Horizontal">
+                <StackPanel x:Name="StackPanelReleaseTipSpeedCmd" Orientation="Horizontal">
                     <Label Width="{StaticResource SettingTitleWidth}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="{StaticResource ReleaseTipSpeedCmd}" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                     <Label Width="{StaticResource SettingColonWidth}" Content=":" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                     <TextBox x:Name="TextBoxReleaseTipSpeedCmd" Width="{StaticResource SettingSpeedWidth}" HorizontalContentAlignment="Center" FontSize="{StaticResource MahApps.Font.Size.Default}" />

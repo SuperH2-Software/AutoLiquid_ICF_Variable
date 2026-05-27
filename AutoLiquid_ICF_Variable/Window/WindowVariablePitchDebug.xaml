@@ -250,7 +250,7 @@
                                             Click="BtnSetPitchHalf_Click"/>
                                 </StackPanel>
 
-                                <Label Content="提示：步进变距范围 9.0 ~ 14.0 mm，步长 0.5 mm"
+                                <Label Content="{StaticResource Prompt_VariableDistanceStep_Range}"
                                        FontSize="12"
                                        Foreground="Gray"
                                        Margin="0,2,0,4"/>

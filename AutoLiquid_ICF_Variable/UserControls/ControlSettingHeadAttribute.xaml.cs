@@ -58,6 +58,12 @@ namespace AutoLiquid_ICF_Variable.UserControls
                 this.StackPanelVariable.Visibility = Visibility.Collapsed;
             }
 
+            // 隐藏可变距不需要的属性
+            if (ParamsHelper.HeadList[this.mHeadIndex].IsVariable)
+                this.StackPanelChannelStep.Visibility = Visibility.Collapsed;
+            else
+                this.StackPanelChannelStep.Visibility = Visibility.Visible;
+
             // 行走逻辑
             switch (ParamsHelper.HeadList[this.mHeadIndex].WalkingLogic)
             {
@@ -121,6 +127,13 @@ namespace AutoLiquid_ICF_Variable.UserControls
                 ParamsHelper.HeadList[this.mHeadIndex].IsVariable = false;
             else if ((bool)this.RBtnVariableYes.IsChecked)
                 ParamsHelper.HeadList[this.mHeadIndex].IsVariable = true;
+
+            // 隐藏可变距不需要的属性
+            if (ParamsHelper.HeadList[this.mHeadIndex].IsVariable)
+                this.StackPanelChannelStep.Visibility = Visibility.Collapsed;
+            else
+                this.StackPanelChannelStep.Visibility = Visibility.Visible;
+
             FileUtils.SaveHead(this.mHeadIndex, ParamsHelper.HeadList[this.mHeadIndex]);
         }
 

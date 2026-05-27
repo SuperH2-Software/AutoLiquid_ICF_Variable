@@ -55,8 +55,6 @@ namespace AutoLiquid_ICF_Variable.UserControls
             this.RBtnReleaseTipAxisQ.IsChecked = ParamsHelper.HeadList[this.mHeadIndex].ReleaseTipAxis == EAxis.Q;
             this.ComboBoxPushCount.SelectedItem = ParamsHelper.HeadList[this.mHeadIndex].ReleaseTipUsePushCount;
             this.ControlReleaseTipOffset.SetParam(mHeadIndex, ParamsHelper.CommonSettingList[this.mHeadIndex].ReleaseTipOffset, ParamsHelper.HeadList[this.mHeadIndex].ReleaseTipAxis);
-            this.TextBoxReleaseTipVariableDistanceStep.Text = ParamsHelper.CommonSettingList[this.mHeadIndex]
-                .ReleaseTipVariableDistanceStep.ToString();
 
             // 退枪头位置
             ControlSettingReleaseTipPosList.AddRange(new List<ControlSettingReleaseTipPos> { this.ControlSettingReleaseTipPos1, this.ControlSettingReleaseTipPos2, this.ControlSettingReleaseTipPos3, this.ControlSettingReleaseTipPos4 });
@@ -91,12 +89,21 @@ namespace AutoLiquid_ICF_Variable.UserControls
             // 如果移液头2可用，隐藏推脱板轴属性
             this.StackPanelReleaseTipAxis.Visibility = ParamsHelper.HeadList[1].Available ? Visibility.Collapsed : Visibility.Visible;
 
-            // 如果移液头可变距，且退枪头方式为卡扣，显示退枪头变距属性
-            this.StackPanelReleaseTipVariableDistanceStep.Visibility =
-                ParamsHelper.HeadList[this.mHeadIndex].IsVariable &&
-                !ParamsHelper.HeadList[this.mHeadIndex].ReleaseTipUsePush
-                    ? Visibility.Visible
-                    : Visibility.Collapsed;
+            // 隐藏可变距不需要的属性
+            if (ParamsHelper.HeadList[this.mHeadIndex].IsVariable)
+            {
+                this.StackPanelReleaseTipMethod.Visibility = Visibility.Collapsed;
+                this.StackPanelReleaseTipAxis.Visibility = Visibility.Collapsed;
+                this.StackPanelReleaseTipOffset.Visibility = Visibility.Collapsed;
+                this.StackPanelReleaseTipSpeedCmd.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                this.StackPanelReleaseTipMethod.Visibility = Visibility.Visible;
+                this.StackPanelReleaseTipAxis.Visibility = Visibility.Visible;
+                this.StackPanelReleaseTipOffset.Visibility = Visibility.Visible;
+                this.StackPanelReleaseTipSpeedCmd.Visibility = Visibility.Visible;
+            }
         }
 
         /// <summary>
@@ -125,8 +132,6 @@ namespace AutoLiquid_ICF_Variable.UserControls
             this.RBtnReleaseTipAxisQ.Checked += RBtnOnChecked;
             this.ComboBoxPushCount.SelectionChanged += ComboBoxOnSelectionChanged;
             this.ControlReleaseTipOffset.TextBoxPos.TextChanged += TextBoxOnTextChanged;
-            this.TextBoxReleaseTipVariableDistanceStep.TextChanged += TextBoxOnTextChanged;
-            this.BtnReleaseTipVariableDistanceStep.Click += BtnOnClick;
 
             for (var i = 0; i < ControlSettingReleaseTipPosList.Count; i++)
             {
@@ -156,9 +161,7 @@ namespace AutoLiquid_ICF_Variable.UserControls
 
         private void BtnOnClick(object sender, RoutedEventArgs e)
         {
-            if (sender.Equals(this.BtnReleaseTipVariableDistanceStep))
-                CmdHelper.Wa(this.mHeadIndex,
-                    ParamsHelper.CommonSettingList[this.mHeadIndex].ReleaseTipVariableDistanceStep);
+  
         }
 
         private void RBtnOnChecked(object sender, RoutedEventArgs e)
@@ -191,8 +194,6 @@ namespace AutoLiquid_ICF_Variable.UserControls
         {
             if (sender.Equals(this.ControlReleaseTipOffset.TextBoxPos))
                 DataHelper.SaveDecimal(this.mHeadIndex, this.ControlReleaseTipOffset.TextBoxPos.Text.Trim(), ref ParamsHelper.CommonSettingList[this.mHeadIndex].ReleaseTipOffset);
-            else if (sender.Equals(this.TextBoxReleaseTipVariableDistanceStep))
-                DataHelper.SaveInt(this.mHeadIndex, this.TextBoxReleaseTipVariableDistanceStep.Text.Trim(), ref ParamsHelper.CommonSettingList[this.mHeadIndex].ReleaseTipVariableDistanceStep);
 
             else if (sender.Equals(ControlSettingReleaseTipPosList[0].ControlPrepareReleaseTipPosX.TextBoxPos))
                 DataHelper.SaveDecimal(this.mHeadIndex, ControlSettingReleaseTipPosList[0].ControlPrepareReleaseTipPosX.TextBoxPos.Text.Trim(), ref ParamsHelper.CommonSettingList[this.mHeadIndex].PrepareReleaseTipPosList[0].X);

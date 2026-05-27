@@ -327,4 +327,5 @@
     <s:String x:Key="Prompt_Connect_Check">网络状态检测</s:String>
     <s:String x:Key="Prompt_Serial_Data_Receiver">串口接收数据：</s:String>
     <s:String x:Key="Prompt_Serial_Data_Sender">串口发送数据：</s:String>
+    <s:String x:Key="Prompt_VariableDistanceStep_Range">提示：步进变距范围 9.0 ~ 14.0 mm，步长 0.5 mm</s:String>
 </ResourceDictionary>

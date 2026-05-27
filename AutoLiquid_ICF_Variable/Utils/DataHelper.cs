@@ -1,4 +1,7 @@
-﻿using System;
+﻿using AutoLiquid_ICF_Variable.VariablePitch;
+using AutoLiquid_Library.Enum;
+using DAERun;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,8 +13,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using AutoLiquid_Library.Enum;
-using DAERun;
 
 namespace AutoLiquid_ICF_Variable.Utils
 {
@@ -111,6 +112,22 @@ namespace AutoLiquid_ICF_Variable.Utils
         public static void SaveBool(int headIndex, bool inputValue, ref bool param, Action saveAction = null)
         {
             param = inputValue;
+            if (saveAction == null)
+                FileUtils.SaveCommonSettings(headIndex, ParamsHelper.CommonSettingList[headIndex]);
+            else
+                saveAction.Invoke();
+        }
+
+        /// <summary>
+        /// 保存可变距速度
+        /// </summary>
+        /// <param name="headIndex">移液头Index</param>
+        /// <param name="inputValue">保存的值</param>
+        /// <param name="param">Json属性</param>
+        /// <param name="saveAction">保存方法</param>
+        public static void SaveVariablePitchSpeed(int headIndex, int inputValue, ref VariablePitchSpeed param, Action saveAction = null)
+        {
+            param = (VariablePitchSpeed)inputValue;
             if (saveAction == null)
                 FileUtils.SaveCommonSettings(headIndex, ParamsHelper.CommonSettingList[headIndex]);
             else

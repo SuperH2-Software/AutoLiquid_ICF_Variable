@@ -1,10 +1,11 @@
-﻿using System;
+﻿using AutoLiquid_ICF_Variable.VariablePitch;
+using AutoLiquid_Library.Enum;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Documents;
-using AutoLiquid_Library.Enum;
 
 namespace AutoLiquid_ICF_Variable.EntityJson
 {
@@ -58,6 +59,8 @@ namespace AutoLiquid_ICF_Variable.EntityJson
          */
         // 变距步数
         public int VariableDistanceStep = 0;
+        // 变距毫米
+        public decimal VariableDistanceMm = 0m;
         /*****************************************************公用属性end************************************************************/
 
 
@@ -90,8 +93,10 @@ namespace AutoLiquid_ICF_Variable.EntityJson
          */
         // 吸液高度
         public decimal LiquidAbsorbHeight = 0.00m;
-        // 吸液速度
+        // 吸液速度（超氢）
         public string AbsorbSpeed = "";
+        // 吸液速度（可变距，01：慢 02：中03：快 04：最快）
+        public VariablePitchSpeed AbsorbSpeedVariable = VariablePitchSpeed.Medium;
         // 吸液后等待
         public decimal LiquidAbsorbDelay = 0.00m;
         // 吸液提起速度
@@ -106,8 +111,10 @@ namespace AutoLiquid_ICF_Variable.EntityJson
          */
         // 喷液高度
         public decimal LiquidJetHeight = 0.00m;
-        // 喷液速度
+        // 喷液速度（超氢）
         public string JetSpeed = "";
+        // 喷液速度（可变距，01：慢 02：中03：快 04：最快）
+        public VariablePitchSpeed JetSpeedVariable = VariablePitchSpeed.Medium;
         // 喷液后等待
         public decimal LiquidJetDelay = 0.00m;
         // 喷液提起速度
