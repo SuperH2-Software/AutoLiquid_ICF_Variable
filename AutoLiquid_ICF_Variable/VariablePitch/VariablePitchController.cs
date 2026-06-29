@@ -101,8 +101,8 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
 
         // ══════════════════════════════════════════════════
         // 0x04 吸液
-        // 发送：04 HH LL 00 00 00 00 00（体积大端16位，µL）
-        // 应答：00 04 HH LL 00 00 00 00（剩余体积）
+        // 发送：04 HH LL 00 00 00 00 00（体积大端16位，µL，最大300ul）
+        // 应答：00 04 HH LL DATA4 00 00 00（DATA2~3为累计/剩余体积，DATA4为执行结果）
         // ══════════════════════════════════════════════════
 
         /// <param name="volumeUl">吸液体积（µL）</param>
@@ -116,13 +116,23 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
                 (byte)(volumeUl >> 8), (byte)(volumeUl & 0xFF));
 
             if (!IsOk(resp, VariablePitchFunctionCode.Aspirate)) return null;
+
+            // 新增执行结果校验 (DATA4 对应数组下标 4)
+            byte resultCode = resp[4];
+            if (resultCode != 0x00)
+            {
+                if (resultCode == 0x01) throw new InvalidOperationException("吸液失败：累计吸液量超过量程 [协议状态码 01]");
+                if (resultCode == 0x03) throw new ArgumentException("吸液失败：参数无效 [协议状态码 03]");
+                throw new InvalidOperationException($"吸液失败：未知错误码 0x{resultCode:X2}");
+            }
+
             return (resp[2] << 8) | resp[3];
         }
 
         // ══════════════════════════════════════════════════
         // 0x05 排液
         // 发送：05 HH LL 00 00 00 00 00（体积大端16位，µL）
-        // 应答：00 05 HH LL 00 00 00 00（剩余体积）
+        // 应答：00 05 HH LL DATA4 00 00 00（DATA2~3为累计/剩余体积，DATA4为执行结果）
         // ══════════════════════════════════════════════════
 
         /// <param name="volumeUl">排液体积（µL）</param>
@@ -136,6 +146,16 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
                 (byte)(volumeUl >> 8), (byte)(volumeUl & 0xFF));
 
             if (!IsOk(resp, VariablePitchFunctionCode.Dispense)) return null;
+
+            // 新增执行结果校验 (DATA4 对应数组下标 4)
+            byte resultCode = resp[4];
+            if (resultCode != 0x00)
+            {
+                if (resultCode == 0x02) throw new InvalidOperationException("排液失败：无液可排 [协议状态码 02]");
+                if (resultCode == 0x03) throw new ArgumentException("排液失败：参数无效 [协议状态码 03]");
+                throw new InvalidOperationException($"排液失败：未知错误码 0x{resultCode:X2}");
+            }
+
             return (resp[2] << 8) | resp[3];
         }
 

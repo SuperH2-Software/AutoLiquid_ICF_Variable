@@ -1419,6 +1419,15 @@ namespace AutoLiquid_ICF_Variable
                 catch (ManualStopException)
                 {
                 }
+                catch (Exception e)
+                {
+                    LogHelper.Error(e.StackTrace);
+                    Dispatcher.Invoke(() =>
+                    {
+                        SetLoadingStatus(ERunStatus.Stop);
+                        MessageBox.Show(e.Message, (string)this.FindResource("Prompt"), MessageBoxButton.OK, MessageBoxImage.Error);
+                    });
+                }
             });
             thread.IsBackground = true;
             thread.Start();
