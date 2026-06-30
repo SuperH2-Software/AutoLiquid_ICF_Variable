@@ -13,9 +13,14 @@ namespace AutoLiquid_ICF_Variable.Utils
         public static Dictionary<ELiquidRange, decimal> LiquidRangeMaxDic = new Dictionary<ELiquidRange, decimal>
         {
             {ELiquidRange.Ten, ParamsHelper.Range.Ten},
+            {ELiquidRange.TwelvePointFive, ParamsHelper.Range.TwelvePointFive},
             {ELiquidRange.Twenty, ParamsHelper.Range.Twenty },
+            {ELiquidRange.Fifty, ParamsHelper.Range.Fifty},
+            {ELiquidRange.OneHundredTen, ParamsHelper.Range.OneHundredTen},
             {ELiquidRange.TwoHundred, ParamsHelper.Range.TwoHundred},
+            {ELiquidRange.ThreeHundred, ParamsHelper.Range.ThreeHundred},
             {ELiquidRange.OneThousand, ParamsHelper.Range.OneThousand},
+            {ELiquidRange.OneThousandTwoHundred, ParamsHelper.Range.OneThousandTwoHundred},
             {ELiquidRange.FiveThousand, ParamsHelper.Range.FiveThousand},
         };
 

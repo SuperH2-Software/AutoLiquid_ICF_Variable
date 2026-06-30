@@ -49,7 +49,15 @@ namespace AutoLiquid_ICF_Variable.UserControls
             this.ComboBoxChannelRow.SelectedItem = ParamsHelper.HeadList[this.mHeadIndex].ChannelRow;
             this.ComboBoxChannelCol.SelectedItem = ParamsHelper.HeadList[this.mHeadIndex].ChannelCol;
             this.ComboBoxChannelStep.SelectedItem = ParamsHelper.HeadList[this.mHeadIndex].ChannelStep;
-            this.ComboBoxLiquidRange.SelectedItem = (int)ParamsHelper.HeadList[this.mHeadIndex].HeadLiquidRange;
+            int targetEnumVal = (int)ParamsHelper.HeadList[this.mHeadIndex].HeadLiquidRange;
+            foreach (ComboBoxItem item in this.ComboBoxLiquidRange.Items)
+            {
+                if (item.Tag != null && item.Tag.ToString() == targetEnumVal.ToString())
+                {
+                    this.ComboBoxLiquidRange.SelectedItem = item;
+                    break;
+                }
+            }
             this.RBtnVariableNo.IsChecked = !ParamsHelper.HeadList[this.mHeadIndex].IsVariable;
             this.RBtnVariableYes.IsChecked = ParamsHelper.HeadList[this.mHeadIndex].IsVariable;
 
@@ -117,7 +125,11 @@ namespace AutoLiquid_ICF_Variable.UserControls
             }
             else if (sender.Equals(this.ComboBoxLiquidRange))
             {
-                DataHelper.SaveLiquidRange((ELiquidRange)((int)this.ComboBoxLiquidRange.SelectedItem), ref ParamsHelper.HeadList[this.mHeadIndex].HeadLiquidRange, () => FileUtils.SaveHead(this.mHeadIndex, ParamsHelper.HeadList[this.mHeadIndex]));
+                if (this.ComboBoxLiquidRange.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag != null)
+                {
+                    int enumValue = int.Parse(selectedItem.Tag.ToString());
+                    DataHelper.SaveLiquidRange((ELiquidRange)enumValue, ref ParamsHelper.HeadList[this.mHeadIndex].HeadLiquidRange, () => FileUtils.SaveHead(this.mHeadIndex, ParamsHelper.HeadList[this.mHeadIndex]));
+                }
             }
         }
 

@@ -63,11 +63,16 @@
                     <Label HorizontalContentAlignment="Center" Content="{StaticResource LiquidRange}" Width="{StaticResource SettingTitleWidth}" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                     <Label Width="{StaticResource SettingColonWidth}" Content=":" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                     <ComboBox x:Name="ComboBoxLiquidRange" Width="{StaticResource SettingValueWidth}" HorizontalContentAlignment="Center" FontSize="{StaticResource MahApps.Font.Size.Default}" SelectedIndex="0">
-                        <system:Int32>10</system:Int32>
-                        <system:Int32>20</system:Int32>
-                        <system:Int32>200</system:Int32>
-                        <system:Int32>1000</system:Int32>
-                        <system:Int32>5000</system:Int32>
+                        <ComboBoxItem Content="10" Tag="10"/>
+                        <ComboBoxItem Content="12.5" Tag="12"/>
+                        <ComboBoxItem Content="20" Tag="20"/>
+                        <ComboBoxItem Content="50" Tag="50"/>
+                        <ComboBoxItem Content="110" Tag="110"/>
+                        <ComboBoxItem Content="200" Tag="200"/>
+                        <ComboBoxItem Content="300" Tag="300"/>
+                        <ComboBoxItem Content="1000" Tag="1000"/>
+                        <ComboBoxItem Content="1200" Tag="1200"/>
+                        <ComboBoxItem Content="5000" Tag="5000"/>
                     </ComboBox>
                     <Label Content="μl" FontSize="{StaticResource MahApps.Font.Size.Default}"/>
                 </StackPanel>

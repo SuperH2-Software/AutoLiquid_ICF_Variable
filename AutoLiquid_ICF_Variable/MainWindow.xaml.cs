@@ -683,14 +683,16 @@ namespace AutoLiquid_ICF_Variable
             }
             else
                 head1ChannelStr = channel + (string)mMainWindow.FindResource("Channel");
-            head1RangeStr = (int)ParamsHelper.HeadList[0].HeadLiquidRange + (string)mMainWindow.FindResource("Ul");
+            string range1Str = ParamsHelper.HeadList[0].HeadLiquidRange == ELiquidRange.TwelvePointFive ? "12.5" : ((int)ParamsHelper.HeadList[0].HeadLiquidRange).ToString();
+            head1RangeStr = range1Str + (string)mMainWindow.FindResource("Ul");
 
             // 移液头2
             if (ParamsHelper.HeadList[1].Available)
             {
                 channel = ParamsHelper.HeadList[1].ChannelRow * ParamsHelper.HeadList[1].ChannelCol;
                 head2ChannelStr = "+" + channel + (string)mMainWindow.FindResource("Channel");
-                head2RangeStr = "+" + (int)ParamsHelper.HeadList[1].HeadLiquidRange + (string)mMainWindow.FindResource("Ul");
+                string range2Str = ParamsHelper.HeadList[1].HeadLiquidRange == ELiquidRange.TwelvePointFive ? "12.5" : ((int)ParamsHelper.HeadList[1].HeadLiquidRange).ToString();
+                head2RangeStr = "+" + range2Str + (string)mMainWindow.FindResource("Ul");
             }
 
             mMainWindow.Title = head1ChannelStr + head1VariableStr + head2ChannelStr + (string)mMainWindow.FindResource("LiquidWorkstation") + " --- " + head1RangeStr + head2RangeStr;
