@@ -71,7 +71,7 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         /// IsVariable=false 返回 null，调用方走传统 P 轴
         /// </summary>
         /// <returns>剩余体积 µL；不变距或失败返回 null</returns>
-        public static async Task<int?> AspirateAsync(int volumeUl)
+        public static async Task<double?> AspirateAsync(double volumeUl)
         {
             if (!_head.IsVariable) return null;
             EnsureReady();
@@ -83,7 +83,7 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         /// IsVariable=false 返回 null，调用方走传统 P 轴
         /// </summary>
         /// <returns>剩余体积 µL；不变距或失败返回 null</returns>
-        public static async Task<int?> DispenseAsync(int volumeUl)
+        public static async Task<double?> DispenseAsync(double volumeUl)
         {
             if (!_head.IsVariable) return null;
             EnsureReady();
@@ -125,11 +125,11 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
             => Task.Run(() => SetPitchAsync(targetPitchMm)).GetAwaiter().GetResult();
 
         /// <summary>吸液（供 CmdHelper 直接调用）</summary>
-        public static int? Aspirate(int volumeUl)
+        public static double? Aspirate(double volumeUl)
             => Task.Run(() => AspirateAsync( volumeUl)).GetAwaiter().GetResult();
 
         /// <summary>排液（供 CmdHelper 直接调用）</summary>
-        public static int? Dispense(int volumeUl)
+        public static double? Dispense(double volumeUl)
             => Task.Run(() => DispenseAsync(volumeUl)).GetAwaiter().GetResult();
 
         /// <summary>活塞回零（供 CmdHelper 直接调用）</summary>

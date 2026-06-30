@@ -2086,9 +2086,9 @@ namespace AutoLiquid_ICF_Variable.Utils
                 {
                     // 正数代表吸液，负数代表喷液
                     if (p > 0)
-                        VariablePitchManager.Aspirate(int.Parse(p.ToString()));
+                        VariablePitchManager.Aspirate((double)p);
                     else
-                        VariablePitchManager.Dispense(int.Parse((p * -1).ToString()));
+                        VariablePitchManager.Dispense((double)(p * -1));
                 }
                 else
                 {

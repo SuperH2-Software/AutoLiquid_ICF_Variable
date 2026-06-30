@@ -101,19 +101,22 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
 
         // ══════════════════════════════════════════════════
         // 0x04 吸液
-        // 发送：04 HH LL 00 00 00 00 00（体积大端16位，µL，最大300ul）
-        // 应答：00 04 HH LL DATA4 00 00 00（DATA2~3为累计/剩余体积，DATA4为执行结果）
+        // 发送：04 HH LL 00 00 00 00 00（体积大端16位，单位0.1µL）
+        // 应答：00 04 HH LL DATA4 00 00 00（DATA2~3为累计体积，DATA4为执行结果）
         // ══════════════════════════════════════════════════
 
-        /// <param name="volumeUl">吸液体积（µL）</param>
+        /// <param name="volumeUl">本次吸液体积（µL，支持0.1µL精度）</param>
         /// <returns>吸液后剩余体积（µL）；失败返回 null</returns>
-        public async Task<int?> AspirateAsync(int volumeUl, int timeoutMs = 10000)
+        public async Task<double?> AspirateAsync(double volumeUl, int timeoutMs = 10000)
         {
             if (volumeUl <= 0)
                 throw new ArgumentOutOfRangeException(nameof(volumeUl), "吸液体积必须大于 0");
 
+            // 实际体积 * 10
+            int volProtocolValue = (int)Math.Round(volumeUl * 10.0);
+
             byte[] resp = await SendAsync(VariablePitchFunctionCode.Aspirate, timeoutMs,
-                (byte)(volumeUl >> 8), (byte)(volumeUl & 0xFF));
+                (byte)(volProtocolValue >> 8), (byte)(volProtocolValue & 0xFF));
 
             if (!IsOk(resp, VariablePitchFunctionCode.Aspirate)) return null;
 
@@ -126,24 +129,28 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
                 throw new InvalidOperationException($"吸液失败：未知错误码 0x{resultCode:X2}");
             }
 
-            return (resp[2] << 8) | resp[3];
+            // 返回 DATA2 和 DATA3 组合的当前枪内累计液量，并还原为实际 µL
+            return ((resp[2] << 8) | resp[3]) / 10.0;
         }
 
         // ══════════════════════════════════════════════════
         // 0x05 排液
-        // 发送：05 HH LL 00 00 00 00 00（体积大端16位，µL）
-        // 应答：00 05 HH LL DATA4 00 00 00（DATA2~3为累计/剩余体积，DATA4为执行结果）
+        // 发送：05 HH LL 00 00 00 00 00（体积大端16位，单位0.1µL）
+        // 应答：00 05 HH LL DATA4 00 00 00（DATA2~3为剩余体积，DATA4为执行结果）
         // ══════════════════════════════════════════════════
 
-        /// <param name="volumeUl">排液体积（µL）</param>
+        /// <param name="volumeUl">本次排液体积（µL，支持0.1µL精度）</param>
         /// <returns>排液后剩余体积（µL）；失败返回 null</returns>
-        public async Task<int?> DispenseAsync(int volumeUl, int timeoutMs = 10000)
+        public async Task<double?> DispenseAsync(double volumeUl, int timeoutMs = 10000)
         {
             if (volumeUl <= 0)
                 throw new ArgumentOutOfRangeException(nameof(volumeUl), "排液体积必须大于 0");
 
+            //  实际体积 * 10
+            int volProtocolValue = (int)Math.Round(volumeUl * 10.0);
+
             byte[] resp = await SendAsync(VariablePitchFunctionCode.Dispense, timeoutMs,
-                (byte)(volumeUl >> 8), (byte)(volumeUl & 0xFF));
+                (byte)(volProtocolValue >> 8), (byte)(volProtocolValue & 0xFF));
 
             if (!IsOk(resp, VariablePitchFunctionCode.Dispense)) return null;
 
@@ -156,7 +163,8 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
                 throw new InvalidOperationException($"排液失败：未知错误码 0x{resultCode:X2}");
             }
 
-            return (resp[2] << 8) | resp[3];
+            // 返回 DATA2 和 DATA3 组合的当前枪内剩余液量，并还原为实际 µL
+            return ((resp[2] << 8) | resp[3]) / 10.0;
         }
 
         // ══════════════════════════════════════════════════
@@ -204,17 +212,18 @@ namespace AutoLiquid_ICF_Variable.VariablePitch
         }
 
         // ══════════════════════════════════════════════════
-        // 0x09 读取吸液排液量（µL）
+        // 0x09 读取吸液排液量（µL） (0.1ul单位)
         // 发送：09 00 00 00 00 00 00 00
         // 应答：00 09 HH LL 00 00 00 00
         // ══════════════════════════════════════════════════
 
         /// <returns>当前液量（µL）；失败返回 null</returns>
-        public async Task<int?> ReadVolumeAsync(int timeoutMs = 2000)
+        public async Task<double?> ReadVolumeAsync(int timeoutMs = 2000)
         {
             byte[] resp = await SendAsync(VariablePitchFunctionCode.ReadVolume, timeoutMs);
             if (!IsOk(resp, VariablePitchFunctionCode.ReadVolume)) return null;
-            return (resp[2] << 8) | resp[3];
+            // 还原为实际 µL
+            return ((resp[2] << 8) | resp[3]) / 10.0;
         }
 
         // ══════════════════════════════════════════════════
